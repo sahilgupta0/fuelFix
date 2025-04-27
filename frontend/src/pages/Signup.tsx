@@ -57,11 +57,12 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      // await signup(data as SignupData);
       
       // Show success toast
+      console.log("Entering in the sign up")
 
       const response = await signup(data as SignupData);
+      console.log("response got : ", response)
       if (response.status === 201) {
         toast.success("Account created successfully! Redirecting to login...");
         setTimeout(() => {

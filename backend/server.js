@@ -13,7 +13,9 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin :["http://localhost:8080", "https://fule-fix-95.vercel.app/"]
+}));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
