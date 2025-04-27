@@ -48,6 +48,14 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+app.post('/', (req, res) =>{
+  res.send({
+    activeStatus : true,
+    error:false,
+
+  })
+})
+
 app.post('/api/signup', async (req, res) => {
   try {
     const {name,
