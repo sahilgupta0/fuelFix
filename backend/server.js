@@ -48,7 +48,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
-app.post('/', (req, res) =>{
+app.get('/', (req, res) =>{
   res.send({
     activeStatus : true,
     error:false,
