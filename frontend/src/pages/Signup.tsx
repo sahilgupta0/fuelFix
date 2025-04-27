@@ -49,6 +49,7 @@ const Signup = () => {
   });
 
   const signup = async (data: SignupData) => {
+    console.log(data)
     return await axios.post(`${import.meta.env.VITE_PROXY_URL}api/signup`, data);
   };
 
