@@ -34,7 +34,7 @@ const Navbar = () => {
   return (
     <nav className="w-full py-4 px-6 border-b bg-white">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Auto Buddy</h1>
+        <h1 className="text-2xl font-bold text-gray-800">FuelFix</h1>
         {isAuthenticated ? (
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-3 outline-none">
