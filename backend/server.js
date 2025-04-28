@@ -24,11 +24,12 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 
 
-
+ 
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
   console.log("in the authorize section")
   const authHeader = req.headers['authorization'];
+
   console.log(authHeader)
   const token = authHeader
   console.log(token)

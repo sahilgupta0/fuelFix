@@ -26,6 +26,7 @@ import {
 import { Badge } from "./../components/ui/badge";
 import { getServiceRequests, acceptServiceRequest, ServiceRequest, User } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -62,15 +63,22 @@ const isUserObject = (user: User | string): user is User => {
 
 
 const Requests = () => {
+
+  const nav = useNavigate();
+
+  const handnewClick = () => {
+    nav('/requestservice')
+  }
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isMechanic = user?.userType === "mechanic";
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['serviceRequests'],
     queryFn: getServiceRequests
   });
-  
+
   const acceptMutation = useMutation({
     mutationFn: (requestId: string) => acceptServiceRequest(requestId),
     onSuccess: () => {
@@ -83,7 +91,7 @@ const Requests = () => {
   });
 
   const handleAcceptRequest = (requestId: string) => {
-    console.log("i am going to send the id to acceptiohnMutaion : " , requestId)
+    console.log("i am going to send the id to acceptiohnMutaion : ", requestId)
     acceptMutation.mutate(requestId);
   };
 
@@ -139,8 +147,8 @@ const Requests = () => {
           <CardHeader>
             <CardTitle>{isMechanic ? "Available Requests" : "My Requests"}</CardTitle>
             <CardDescription>
-              {isMechanic 
-                ? "View and accept service requests from users" 
+              {isMechanic
+                ? "View and accept service requests from users"
                 : "Track the status of your service requests"}
             </CardDescription>
           </CardHeader>
@@ -177,16 +185,16 @@ const Requests = () => {
                         </TableCell>
                         {isMechanic && (
                           <TableCell>
-                            
-                            {request.user && isUserObject(request.user) 
-                              ? request.user.name 
+
+                            {request.user && isUserObject(request.user)
+                              ? request.user.name
                               : '-'}
                           </TableCell>
                         )}
                         {!isMechanic && (
                           <TableCell>
-                            {request.assignedTo && isUserObject(request.assignedTo) 
-                              ? request.assignedTo.name 
+                            {request.assignedTo && isUserObject(request.assignedTo)
+                              ? request.assignedTo.name
                               : '-'}
                           </TableCell>
                         )}
@@ -196,7 +204,7 @@ const Requests = () => {
                         <TableCell>
                           {isMechanic && request.status === 'pending' && (
                             <div className="flex space-x-2">
-                              <Button 
+                              <Button
                                 size="sm"
                                 onClick={() => handleAcceptRequest(request["_id"])}
                                 disabled={acceptMutation.isPending}
@@ -204,8 +212,8 @@ const Requests = () => {
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Accept
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleContactUser(request.user)}
                               >
@@ -216,8 +224,8 @@ const Requests = () => {
                           )}
                           {isMechanic && request.status === 'accepted' && (
                             <div className="flex space-x-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleContactUser(request.user)}
                               >
@@ -235,13 +243,13 @@ const Requests = () => {
                           {!isMechanic && request.status === 'accepted' && (
                             <div className="flex space-x-2">
                               {request.assignedTo && (
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => handleContactUser(request.assignedTo)}
                                 >
                                   <Phone className="h-4 w-4 mr-1" />
-                                  Contact Mechanic  
+                                  Contact Mechanic
                                 </Button>
                               )}
                             </div>
@@ -257,12 +265,12 @@ const Requests = () => {
                 <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900">No requests found</h3>
                 <p className="text-gray-500 mt-1">
-                  {isMechanic 
+                  {isMechanic
                     ? "There are no pending service requests at the moment."
                     : "You haven't made any service requests yet."}
                 </p>
                 {!isMechanic && (
-                  <Button className="mt-6" onClick={() => window.location.href = "/requestservice"}>
+                  <Button className="mt-6" onClick={() => handnewClick()}>
                     Request a Service
                   </Button>
                 )}

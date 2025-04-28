@@ -36,15 +36,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-
-  // const { user } = useAuth(); // assuming AuthProvider provides `user`
-  
-  
-  //   useEffect(() => {
-  //     if (user) {
-  //       navigate("/logmain", { replace: true }); // Already logged in, redirect
-  //     }
-  //   }, [user, navigate]);
   
 
   const form = useForm<SignupFormValues>({
