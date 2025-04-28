@@ -1,11 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
 import { Phone, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import React from "react";
 
-import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
+import Navbar from "./components/Navbar";
+import { Button } from "./components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,7 +14,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "./components/ui/card";
 import {
   Table,
   TableBody,
@@ -21,9 +22,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { getServiceRequests, acceptServiceRequest, ServiceRequest, User } from "@/services/api";
+} from "./components/ui/table";
+import { Badge } from "./components/ui/badge";
+import { getServiceRequests, acceptServiceRequest, ServiceRequest, User } from "./services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Helper function to check if user is a User object (not a string)

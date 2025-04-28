@@ -10,7 +10,6 @@ require('dotenv').config();
 
 // Initialize express app
 const app = express();
-i;
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -28,8 +27,11 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
+  console.log("in the authorize section")
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')
+  console.log(authHeader)
+  const token = authHeader
+  console.log(token)
   
   if (!token) {
     return res.status(401).json({ message: 'Authentication required' });
@@ -40,7 +42,7 @@ const authenticateToken = (req, res, next) => {
       return res.status(403).json({ message: 'Invalid token' });
     }
 
-    // console.log("decode user : ", user)
+    console.log("decode user : ", user)
     
     req.user = user;
     next();

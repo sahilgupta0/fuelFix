@@ -129,7 +129,7 @@ export const createServiceRequest = async (data: CreateRequestData): Promise<Ser
     data, // The actual request data
     {
       headers: {
-        'Authorization': `Bearer ${storedToken}` // Pass the token in the Authorization header
+        'Authorization': `${storedToken}` // Pass the token in the Authorization header
       }
     }
   );
@@ -146,7 +146,7 @@ export const getServiceRequests = async (): Promise<ServiceRequest[]> => {
   
   const response = await axios.get(`${import.meta.env.VITE_PROXY_URL}api/requests`, {
     headers: {
-      Authorization: `Bearer ${storedToken}`
+      Authorization: `${storedToken}`
     }
   });
 
@@ -162,7 +162,7 @@ export const acceptServiceRequest = async (requestId: string): Promise<ServiceRe
   const storedToken = localStorage.getItem('authToken');
   const response = await axios.get(`${import.meta.env.VITE_PROXY_URL}api/requests/${requestId}/accept`, {
     headers: {
-      Authorization: `Bearer ${storedToken}`
+      Authorization: `${storedToken}`
     }
   });
 

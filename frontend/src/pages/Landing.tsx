@@ -1,11 +1,23 @@
 import { Button } from "./../components/ui/button";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Wrench, MapPin, UserRound, Clock, Shield, Star } from "lucide-react";
 import Navbar from "./../components/Navbar";
 import React from 'react';
+import { useAuth } from "./../contexts/AuthContext";
 
 const Landing = () => {
   const navigate = useNavigate();
+
+  const { user } = useAuth(); // assuming AuthProvider provides `user`
+  
+  
+    useEffect(() => {
+      if (user) {
+        console.log("stop the user from going further back")
+        navigate("/logmain", { replace: true }); // Already logged in, redirect
+      }
+    }, [user, navigate]);
 
   const features = [
     {

@@ -1,10 +1,10 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "./components/ui/toaster";
+import { Toaster as Sonner } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -13,11 +13,22 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RequestService from "./pages/RequestService";
 import Requests from "./pages/Requests";
 import Landing from "./pages/Landing";
+import React from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Create a client
 const queryClient = new QueryClient();
 
 const App = () => {
+
+  const isAuthenticated = localStorage.getItem('token');
+
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     navigate('/dashboard'); // or wherever you want
+  //   }
+  // }, [isAuthenticated, navigate]);
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

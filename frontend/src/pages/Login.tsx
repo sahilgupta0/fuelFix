@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./../components/ui/button";
 import { Input } from "./../components/ui/input";
@@ -28,9 +28,23 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
+
+ 
+
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+
+   // if the user is login then after pressing back it shoudl not go back to login in paga again so we are redirecting it to main page 
+   const { user } = useAuth(); // assuming AuthProvider provides `user`
+
+
+  useEffect(() => {
+    if (user) {
+      console.log("stop the user from going further back")
+      navigate("/logmain", { replace: true }); // Already logged in, redirect
+    }
+  }, [user, navigate]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -54,9 +68,9 @@ const Login = () => {
       const response = await login(data as LoginData);
 
       console.log("data came from database")
+      const responseData = response.data;
       
       // Store token and user data
-      const responseData = response.data;
       authLogin(responseData.token, {
         name: responseData.user.name,
         email: responseData.user.email,

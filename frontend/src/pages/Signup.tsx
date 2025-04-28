@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./../components/ui/button";
 import { Input } from "./../components/ui/input";
@@ -35,6 +35,17 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 const Signup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+
+
+  // const { user } = useAuth(); // assuming AuthProvider provides `user`
+  
+  
+  //   useEffect(() => {
+  //     if (user) {
+  //       navigate("/logmain", { replace: true }); // Already logged in, redirect
+  //     }
+  //   }, [user, navigate]);
+  
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
