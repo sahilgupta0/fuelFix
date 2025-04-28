@@ -26,10 +26,14 @@ const Navbar = () => {
   const handleViewRequest = () => {
     navigate("/requests");
   };
+  const handleMyRequest = () => {
+    navigate("/myrequests");
+  };
 
   const handleEditProfile = () => {
     navigate("/profile");
   };
+  const isMechanic = user?.userType === "mechanic";
 
   return (
     <nav className="w-full py-4 px-6 border-b bg-white">
@@ -51,6 +55,12 @@ const Navbar = () => {
                 <Eye className="mr-2 h-4 w-4" />
                 <span>View Request</span>
               </DropdownMenuItem>
+              {isMechanic && (
+                <DropdownMenuItem className="cursor-pointer" onClick={handleMyRequest}>
+                <Eye className="mr-2 h-4 w-4" />
+                <span>My Request</span>
+              </DropdownMenuItem>
+              )}
               <DropdownMenuItem className="cursor-pointer" onClick={handleEditProfile}>
                 <PenLine className="mr-2 h-4 w-4" />
                 <span>Edit Profile</span>

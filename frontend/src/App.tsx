@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RequestService from "./pages/RequestService";
+import MyRequests from "./pages/MyRequests";
 import Requests from "./pages/Requests";
 import Landing from "./pages/Landing";
 import React from "react";
@@ -47,6 +48,8 @@ const App = () => {
                 <Route path="/logmain" element={<Index />} />
                 <Route path="/requestservice" element={<RequestService />} />
                 <Route path="/requests" element={<Requests />} />
+                <Route path="/myrequests" element={<MyRequests/>} />
+                
                 {/* Add more protected routes here */}
               </Route>
               

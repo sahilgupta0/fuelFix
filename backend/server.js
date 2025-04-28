@@ -28,7 +28,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Auth Middleware
 const authenticateToken = (req, res, next) => {
   console.log("in the authorize section")
-  const authHeader = req.headers['authorization'];
+  const authHeader = req.headers['authorization']; //it can contain many thing so we havve to split the 
 
   console.log(authHeader)
   const token = authHeader
@@ -257,6 +257,34 @@ app.get('/api/requests', authenticateToken, async (req, res) => {
   }
 });
 
+
+app.get('/api/myrequests', authenticateToken, async (req, res) => {
+  try {
+    let requests;
+    
+    // If user is a mechanic, show all pending requests
+    if (req.user.userType === 'mechanic') {
+      requests = await Request.find({ 
+        $or: [
+          { status: 'pending' },
+          { assignedTo: req.user.id }
+        ]
+      }).populate('user', 'name phoneNumber address');
+
+
+    } else {
+      // If regular user, show only their requests
+      requests = await Request.find({ user: req.user.id })
+                              .populate('assignedTo', 'name phoneNumber');
+    }
+    
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error('Get requests error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 app.get('/api/requests/:id/accept', authenticateToken, async (req, res) => {
   try {
     // Only mechanics can accept requests
@@ -279,6 +307,34 @@ app.get('/api/requests/:id/accept', authenticateToken, async (req, res) => {
     request.assignedTo = req.user.id;
     await request.save();
     
+    res.status(200).json({ message: 'Request accepted', request });
+  } catch (error) {
+    console.error('Accept request error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+
+
+app.put('/api/myrequests/:id/cancel', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.userType !== 'mechanic') {
+      return res.status(403).json({ message: 'Only mechanics can accept requests' });
+    }
+
+    const request = await Request.findById(req.params.id);
+
+    
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+    if(request.status == "accepted"){
+      request.status = 'cancelled';
+      await request.save();
+    }
+    else{
+      res.status(400).json({message : "Request is not accepted"})
+    }
     res.status(200).json({ message: 'Request accepted', request });
   } catch (error) {
     console.error('Accept request error:', error);

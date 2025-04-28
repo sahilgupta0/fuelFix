@@ -154,6 +154,18 @@ export const getServiceRequests = async (): Promise<ServiceRequest[]> => {
   return response.data; 
 };
 
+export const getMyServiceRequests = async (): Promise<ServiceRequest[]> => {
+  // Simulate API call
+  const storedToken = localStorage.getItem('authToken');
+  
+  const response = await axios.get(`${import.meta.env.VITE_PROXY_URL}api/myrequests`, {
+    headers: {
+      Authorization: `${storedToken}`
+    }
+  });
+  return response.data; 
+};
+
 export const acceptServiceRequest = async (requestId: string): Promise<ServiceRequest> => {
   // Simulate API call
 
@@ -165,6 +177,26 @@ export const acceptServiceRequest = async (requestId: string): Promise<ServiceRe
       Authorization: `${storedToken}`
     }
   });
+
+  console.log(response.data)
+
+  // Simulate successful response
+  return response.data; 
+};
+
+
+export const cancelledServiceRequest = async (requestId: string): Promise<ServiceRequest> => {
+  // Simulate API call
+  const storedToken = localStorage.getItem('authToken');
+  const response = await axios.put(
+  `${import.meta.env.VITE_PROXY_URL}api/myrequests/${requestId}/cancel`,
+  {}, // Empty body
+  {
+    headers: {
+      Authorization: `${storedToken}`
+    }
+  }
+);
 
   console.log(response.data)
 

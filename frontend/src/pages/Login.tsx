@@ -36,7 +36,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
    // if the user is login then after pressing back it shoudl not go back to login in paga again so we are redirecting it to main page 
-   const { user } = useAuth(); // assuming AuthProvider provides `user`
+  const { user } = useAuth(); // assuming AuthProvider provides `user`
 
 
   useEffect(() => {
