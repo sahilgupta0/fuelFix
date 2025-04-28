@@ -140,9 +140,6 @@ const Login = () => {
               />
 
               <div className="text-sm text-gray-600 mb-4">
-                <p>Demo accounts:</p>
-                <p>User: user@example.com / password</p>
-                <p>Mechanic: mechanic@example.com / password</p>
               </div>
 
               <Button
