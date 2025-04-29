@@ -31,7 +31,7 @@
 
 | Layer     | Technology            |
 |-----------|------------------------|
-| Frontend  | React Native           |
+| Frontend  | React           |
 | Backend   | Node.js, Express       |
 | Database  | MongoDB / MongoDB Atlas |
 | Maps      | Google Maps API        |
