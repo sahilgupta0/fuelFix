@@ -7,7 +7,7 @@ const User = require('./models/User');
 const Request = require('./models/Request');
 const Mechanic = require('./models/Mechanic')
 require('dotenv').config();
-
+const path = require('path')
 // Initialize express app
 const app = express();
 // Middleware
@@ -239,7 +239,7 @@ app.get('/api/requests', authenticateToken, async (req, res) => {
       requests = await Request.find({ 
         $or: [
           { status: 'pending' },
-          { assignedTo: req.user.id }
+          // { assignedTo: req.user.id } //removing this because we only want to show the pending request
         ]
       }).populate('user', 'name phoneNumber address');
 
@@ -262,21 +262,12 @@ app.get('/api/myrequests', authenticateToken, async (req, res) => {
   try {
     let requests;
     
-    // If user is a mechanic, show all pending requests
-    if (req.user.userType === 'mechanic') {
-      requests = await Request.find({ 
-        $or: [
-          { status: 'pending' },
-          { assignedTo: req.user.id }
-        ]
-      }).populate('user', 'name phoneNumber address');
-
-
-    } else {
-      // If regular user, show only their requests
-      requests = await Request.find({ user: req.user.id })
-                              .populate('assignedTo', 'name phoneNumber');
-    }
+    requests = await Request.find({ 
+      $or: [
+        // { status: 'pending' },    // because we only want to show the request assign to the mechanic, since it is the only their request
+        { assignedTo: req.user.id }
+      ]
+    }).populate('user', 'name phoneNumber address');
     
     res.status(200).json(requests);
   } catch (error) {
@@ -318,6 +309,29 @@ app.get('/api/requests/:id/accept', authenticateToken, async (req, res) => {
 
 app.put('/api/myrequests/:id/cancel', authenticateToken, async (req, res) => {
   try {
+
+    const request = await Request.findById(req.params.id);
+
+    
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+    if(request.status == "accepted" || request.status == "pending"){
+      request.status = 'cancelled';
+      await request.save();
+    }
+    else{
+      res.status(400).json({message : "Request is not accepted"})
+    }
+    res.status(200).json({ message: 'Request accepted', request });
+  } catch (error) {
+    console.error('Accept request error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+app.put('/api/myrequests/:id/completed', authenticateToken, async (req, res) => {
+  try {
     if (req.user.userType !== 'mechanic') {
       return res.status(403).json({ message: 'Only mechanics can accept requests' });
     }
@@ -340,6 +354,12 @@ app.put('/api/myrequests/:id/cancel', authenticateToken, async (req, res) => {
     console.error('Accept request error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
+});
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 // Start server

@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./../contexts/AuthContext";
-import { Phone, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Phone, CheckCircle, Clock, AlertCircle, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import React from 'react';
 
@@ -24,7 +24,7 @@ import {
   TableRow,
 } from "./../components/ui/table";
 import { Badge } from "./../components/ui/badge";
-import { getServiceRequests, acceptServiceRequest, ServiceRequest, User } from "./../services/api";
+import { getServiceRequests, acceptServiceRequest, ServiceRequest, User, cancelledServiceRequest } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -54,9 +54,31 @@ const getServiceTypeDisplay = (serviceType: string) => {
   }
 };
 
+
 // Helper function to check if user is a User object (not a string)
 const isUserObject = (user: User | string): user is User => {
   return typeof user !== 'string';
+};
+
+
+const handleCancleUser = (requestId: string) => {
+  console.log("about to cancel the request")
+  try {
+    cancelledServiceRequest(requestId)
+  }
+  catch {
+    toast.error("Failed to Cancel the request !!!")
+  }
+};
+
+const handleCompletedUser = (requestId: string) => {
+  console.log("about to mark completed the request")
+  try {
+    completedServiceRequest(requestId)
+  }
+  catch {
+    toast.error("Failed to Complete the request !!!")
+  }
 };
 
 
@@ -235,22 +257,56 @@ const Requests = () => {
                             </div>
                           )}
                           {!isMechanic && request.status === 'pending' && (
-                            <div className="flex items-center text-yellow-600">
-                              <Clock className="h-4 w-4 mr-1" />
-                              Waiting
+                            <div className="space-x-2">
+                              <Button
+                                className="bg-red-400"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleCancleUser(request["_id"])}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Cancel
+                              </Button>
                             </div>
                           )}
                           {!isMechanic && request.status === 'accepted' && (
                             <div className="flex space-x-2">
                               {request.assignedTo && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleContactUser(request.assignedTo)}
-                                >
-                                  <Phone className="h-4 w-4 mr-1" />
-                                  Contact Mechanic
-                                </Button>
+                                <div className="flex space-x-2">
+                                  <div className="space-x-2">
+                                    <Button
+                                      className="bg-red-400"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCancleUser(request["_id"])}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                  <div className="space-x-2">
+                                    <Button
+                                      className="bg-green-400"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCompletedUser(request["_id"])}
+                                    >
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Completed
+                                    </Button>
+                                  </div>
+                                  <div className="space-x-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleContactUser(request.assignedTo)}
+                                    >
+                                      <Phone className="h-4 w-4 mr-1" />
+                                      Contact Mechanic
+                                    </Button>
+                                  </div>
+
+                                </div>
                               )}
                             </div>
                           )}

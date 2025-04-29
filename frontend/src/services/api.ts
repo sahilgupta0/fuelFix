@@ -203,3 +203,23 @@ export const cancelledServiceRequest = async (requestId: string): Promise<Servic
   // Simulate successful response
   return response.data; 
 };
+
+
+export const completedServiceRequest = async (requestId: string): Promise<ServiceRequest> => {
+  // Simulate API call
+  const storedToken = localStorage.getItem('authToken');
+  const response = await axios.put(
+  `${import.meta.env.VITE_PROXY_URL}api/myrequests/${requestId}/completed`,
+  {}, // Empty body
+  {
+    headers: {
+      Authorization: `${storedToken}`
+    }
+  }
+);
+
+  console.log(response.data)
+
+  // Simulate successful response
+  return response.data; 
+};

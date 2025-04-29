@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./../contexts/AuthContext";
-import { Phone, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Phone, CheckCircle, Clock, AlertCircle, Cross, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import React from 'react';
 
@@ -24,7 +24,7 @@ import {
     TableRow,
 } from "./../components/ui/table";
 import { Badge } from "./../components/ui/badge";
-import { getMyServiceRequests, acceptServiceRequest, ServiceRequest, User, cancelledServiceRequest } from "./../services/api";
+import { getMyServiceRequests, ServiceRequest, User, cancelledServiceRequest } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -38,6 +38,12 @@ const getStatusBadge = (status: string) => {
             return <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>;
         case "cancelled":
             return <Badge variant="outline" className="bg-red-100 text-red-800">Cancelled</Badge>;
+        case "user have completed":
+            return <Badge variant="outline" className="bg-red-100 text-green-300">Cancelled</Badge>;
+
+        case "mechanic have completed":
+            return <Badge variant="outline" className="bg-red-100 text-green-300">Cancelled</Badge>;
+
         default:
             return <Badge variant="outline">{status}</Badge>;
     }
@@ -85,14 +91,25 @@ const MyRequests = () => {
     };
 
     const handleCancleUser = (requestId: string) => {
-        console.log("about to cancel the user")
-        try{
+        console.log("about to cancel the request")
+        try {
             cancelledServiceRequest(requestId)
         }
-        catch{
+        catch {
             toast.error("Failed to Cancel the request !!!")
         }
     };
+
+    const handleCompletedUser = (requestId: string) => {
+        console.log("about to mark completed the request")
+        try {
+            completedServiceRequest(requestId)
+        }
+        catch {
+            toast.error("Failed to Complete the request !!!")
+        }
+    };
+
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString();
@@ -189,8 +206,20 @@ const MyRequests = () => {
                                                                     variant="outline"
                                                                     onClick={() => handleCancleUser(request["_id"])}
                                                                 >
-                                                                    <Phone className="h-4 w-4 mr-1" />
+                                                                    <X className="h-4 w-4 mr-1" />
                                                                     Cancel
+                                                                </Button>
+                                                            </div>
+
+                                                            <div className="space-x-2 ">
+                                                                <Button
+                                                                    className="bg-green-400"
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleCompletedUser(request["_id"])}
+                                                                >
+                                                                    <Check className="h-4 w-4 mr-1" />
+                                                                    completed
                                                                 </Button>
                                                             </div>
 

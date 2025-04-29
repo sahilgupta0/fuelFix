@@ -8,8 +8,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ redirectPath = "/login" }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthLoaded } = useAuth();
   const location = useLocation();
+
+  if (! isAuthLoaded) {
+    return <div>Loading...</div>; // Or a spinner
+  }
 
   if (!isAuthenticated) {
     // Use state to remember where the user was trying to go
