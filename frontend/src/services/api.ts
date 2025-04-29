@@ -185,7 +185,7 @@ export const acceptServiceRequest = async (requestId: string): Promise<ServiceRe
 };
 
 
-export const cancelledServiceRequest = async (requestId: string): Promise<ServiceRequest> => {
+export const canceledServiceRequest = async (requestId: string): Promise<ServiceRequest> => {
   // Simulate API call
   const storedToken = localStorage.getItem('authToken');
   const response = await axios.put(

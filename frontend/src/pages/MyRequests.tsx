@@ -24,7 +24,7 @@ import {
     TableRow,
 } from "./../components/ui/table";
 import { Badge } from "./../components/ui/badge";
-import { getMyServiceRequests, ServiceRequest, User, cancelledServiceRequest, completedServiceRequest } from "./../services/api";
+import { getMyServiceRequests, ServiceRequest, User, completedServiceRequest, canceledServiceRequest } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -90,24 +90,35 @@ const MyRequests = () => {
         }
     };
 
-    const handleCancleUser = (requestId: string) => {
-        console.log("about to cancel the request")
-        try {
-            cancelledServiceRequest(requestId)
-        }
-        catch {
-            toast.error("Failed to Cancel the request !!!")
-        }
+    const cancelMutation = useMutation({
+        mutationFn: (requestId: string) => canceledServiceRequest(requestId),
+        onSuccess: () => {
+            toast.success("Request canceled successfully!");
+            queryClient.invalidateQueries({ queryKey: ['serviceRequests'] });
+        },
+        onError: () => {
+            toast.error("Failed to cancel request. Please try again.");
+        },
+    });
+
+    const handleCancelUser = (requestId: string) => {
+        cancelMutation.mutate(requestId)
     };
 
+    const completeMutation = useMutation({
+        mutationFn: (requestId: string) => completedServiceRequest(requestId),
+        onSuccess: () => {
+            toast.success("Request Completed successfully!");
+            queryClient.invalidateQueries({ queryKey: ['serviceRequests'] });
+        },
+        onError: () => {
+            toast.error("Failed to Complete request. Please try again.");
+        },
+    });
+
+
     const handleCompletedUser = (requestId: string) => {
-        console.log("about to mark completed the request")
-        try {
-            completedServiceRequest(requestId)
-        }
-        catch {
-            toast.error("Failed to Complete the request !!!")
-        }
+        completeMutation.mutate(requestId)
     };
 
 
@@ -204,7 +215,7 @@ const MyRequests = () => {
                                                                     className="bg-red-400"
                                                                     size="sm"
                                                                     variant="outline"
-                                                                    onClick={() => handleCancleUser(request["_id"])}
+                                                                    onClick={() => handleCancelUser(request["_id"])}
                                                                 >
                                                                     <X className="h-4 w-4 mr-1" />
                                                                     Cancel
@@ -239,7 +250,7 @@ const MyRequests = () => {
                                                     )}
 
                                                     {request.status === 'user have completed' && (
-                                                        <div  className="flex space-x-2">
+                                                        <div className="flex space-x-2">
 
                                                             <div className="space-x-2">
                                                                 <Button
