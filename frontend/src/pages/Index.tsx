@@ -21,13 +21,7 @@ const Index = () => {
 
    const { user } = useAuth(); // assuming AuthProvider provides `user`
   
-  
-  // useEffect(() => {
-  //   if (user) {
-  //     console.log("stop the user from going further back")
-  //     navigate("/logmain", { replace: true }); // Already logged in, redirect
-  //   }
-  // }, [user, navigate]);
+
 
   return (
     <div className="min-h-screen bg-gray-50">

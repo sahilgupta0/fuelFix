@@ -13,6 +13,8 @@ import {
 } from "./../components/ui/dropdown-menu";
 import React from "react";
 
+import { Link } from 'react-router-dom';
+
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +40,11 @@ const Navbar = () => {
   return (
     <nav className="w-full py-4 px-6 border-b bg-white">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">FuelFix</h1>
+      <Link to="/" className="flex items-center space-x-2">
+            <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              Fuel<span className="text-gray-800 dark:text-white">Fix</span>
+            </span>
+          </Link>
         {isAuthenticated ? (
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-3 outline-none">
