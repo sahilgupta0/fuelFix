@@ -60,7 +60,9 @@ cd frontend
 ```bash
 npm i
 ```
-### 5. Run the server and frontend 
+### 5. Create one .evn file as shown in .env.sample
+
+### 6. Run the server and frontend 
 ```bash
 npm run dev
 ```
