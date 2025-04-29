@@ -26,7 +26,7 @@ const RequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted', 'completed', 'cancelled'],
+    enum: ['pending', 'accepted','user have completed', 'mechanic have completed', 'completed', 'cancelled'],
     default: 'pending'
   },
   assignedTo: {

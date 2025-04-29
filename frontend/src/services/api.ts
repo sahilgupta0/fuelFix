@@ -36,7 +36,7 @@ export interface ServiceRequest {
   vehicleType: "car" | "motorbike";
   serviceType: "flatTire" | "fuel" | "engine" | "spark" | "oilLeakage";
   description: string;
-  status: "pending" | "accepted" | "completed" | "cancelled";
+  status: "pending" | "accepted" | "completed" | "cancelled" | 'mechanic have completed' | 'user have completed';
   image?: string;
   user: User | string;
   assignedTo?: User | string;

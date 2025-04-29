@@ -7,8 +7,7 @@ const User = require('./models/User');
 const Request = require('./models/Request');
 const Mechanic = require('./models/Mechanic')
 require('dotenv').config();
-const path = require('path')
-// Initialize express app
+const path = require('path');
 const app = express();
 // Middleware
 app.use(express.json());
@@ -29,10 +28,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 const authenticateToken = (req, res, next) => {
   console.log("in the authorize section")
   const authHeader = req.headers['authorization']; //it can contain many thing so we havve to split the 
-
-  console.log(authHeader)
   const token = authHeader
-  console.log(token)
   
   if (!token) {
     return res.status(401).json({ message: 'Authentication required' });
@@ -42,8 +38,6 @@ const authenticateToken = (req, res, next) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid token' });
     }
-
-    console.log("decode user : ", user)
     
     req.user = user;
     next();
@@ -332,9 +326,6 @@ app.put('/api/myrequests/:id/cancel', authenticateToken, async (req, res) => {
 
 app.put('/api/myrequests/:id/completed', authenticateToken, async (req, res) => {
   try {
-    if (req.user.userType !== 'mechanic') {
-      return res.status(403).json({ message: 'Only mechanics can accept requests' });
-    }
 
     const request = await Request.findById(req.params.id);
 
@@ -342,12 +333,29 @@ app.put('/api/myrequests/:id/completed', authenticateToken, async (req, res) => 
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
     }
-    if(request.status == "accepted"){
-      request.status = 'cancelled';
+    if( req.user.userType == 'mechanic' ){
+      if(request.status == "accepted"){
+        request.status = 'mechanic have completed'
+      }
+      else if(request.status == "user have completed"){
+        request.status = "completed"
+      }
+      else{
+        res.status(400).json({message : "Already accepted"})
+      }
       await request.save();
     }
     else{
-      res.status(400).json({message : "Request is not accepted"})
+      if(request.status == "accepted"){
+        request.status = 'user have completed'
+      }
+      else if(request.status == "mechanic have completed"){
+        request.status = "completed"
+      }
+      else{
+        res.status(400).json({message : "Already accepted"})
+      }
+      await request.save();
     }
     res.status(200).json({ message: 'Request accepted', request });
   } catch (error) {

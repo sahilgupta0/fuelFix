@@ -24,25 +24,25 @@ import {
     TableRow,
 } from "./../components/ui/table";
 import { Badge } from "./../components/ui/badge";
-import { getMyServiceRequests, ServiceRequest, User, cancelledServiceRequest } from "./../services/api";
+import { getMyServiceRequests, ServiceRequest, User, cancelledServiceRequest, completedServiceRequest } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 const getStatusBadge = (status: string) => {
     switch (status) {
         case "pending":
-            return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+            return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{status}</Badge>;
         case "accepted":
-            return <Badge variant="outline" className="bg-blue-100 text-blue-800">Accepted</Badge>;
+            return <Badge variant="outline" className="bg-blue-100 text-blue-800">{status}</Badge>;
         case "completed":
-            return <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>;
+            return <Badge variant="outline" className="bg-green-100 text-green-950">{status}</Badge>;
         case "cancelled":
-            return <Badge variant="outline" className="bg-red-100 text-red-800">Cancelled</Badge>;
+            return <Badge variant="outline" className="bg-red-100 text-red-800">{status}</Badge>;
         case "user have completed":
-            return <Badge variant="outline" className="bg-red-100 text-green-300">Cancelled</Badge>;
+            return <Badge variant="outline" className="bg-green-100 text-green-6600">{status}</Badge>;
 
         case "mechanic have completed":
-            return <Badge variant="outline" className="bg-red-100 text-green-300">Cancelled</Badge>;
+            return <Badge variant="outline" className="bg-green-100 text-green-600">{status}</Badge>;
 
         default:
             return <Badge variant="outline">{status}</Badge>;
@@ -237,6 +237,35 @@ const MyRequests = () => {
                                                         </div>
 
                                                     )}
+
+                                                    {request.status === 'user have completed' && (
+                                                        <div  className="flex space-x-2">
+
+                                                            <div className="space-x-2">
+                                                                <Button
+                                                                    className="bg-green-400"
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleCompletedUser(request["_id"])}
+                                                                >
+                                                                    <Check className="h-4 w-4 mr-1" />
+                                                                    Completed
+                                                                </Button>
+                                                            </div>
+                                                            <div className="space-x-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleContactUser(request.assignedTo)}
+                                                                >
+                                                                    <Phone className="h-4 w-4 mr-1" />
+                                                                    Contact User
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+
                                                 </TableCell>
                                             </TableRow>
                                         ))}

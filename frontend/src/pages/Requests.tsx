@@ -1,9 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./../contexts/AuthContext";
-import { Phone, CheckCircle, Clock, AlertCircle, X, Check } from "lucide-react";
+import { Phone, CheckCircle, AlertCircle, X, Check } from "lucide-react";
 import { toast } from "sonner";
-import React from 'react';
+import React, { useState } from 'react';
 
 import Navbar from "./../components/Navbar";
 import { Button } from "./../components/ui/button";
@@ -24,24 +24,33 @@ import {
   TableRow,
 } from "./../components/ui/table";
 import { Badge } from "./../components/ui/badge";
-import { getServiceRequests, acceptServiceRequest, ServiceRequest, User, cancelledServiceRequest } from "./../services/api";
+import { getServiceRequests, acceptServiceRequest, ServiceRequest, User, cancelledServiceRequest, completedServiceRequest } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { boolean } from "zod";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "pending":
-      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{status}</Badge>;
     case "accepted":
-      return <Badge variant="outline" className="bg-blue-100 text-blue-800">Accepted</Badge>;
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800">{status}</Badge>;
     case "completed":
-      return <Badge variant="outline" className="bg-green-100 text-green-800">Completed</Badge>;
+      return <Badge variant="outline" className="bg-green-100 text-green-950">{status}</Badge>;
     case "cancelled":
-      return <Badge variant="outline" className="bg-red-100 text-red-800">Cancelled</Badge>;
+      return <Badge variant="outline" className="bg-red-100 text-red-800">{status}</Badge>;
+    case "user have completed":
+      return <Badge variant="outline" className="bg-green-=100 text-green-600">{status}</Badge>;
+    case "mechanic have completed":
+      return <Badge variant="outline" className="bg-green-100 text-green-600">{status}</Badge>;
+
+
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
 };
+
+
 
 const getServiceTypeDisplay = (serviceType: string) => {
   switch (serviceType) {
@@ -61,30 +70,11 @@ const isUserObject = (user: User | string): user is User => {
 };
 
 
-const handleCancleUser = (requestId: string) => {
-  console.log("about to cancel the request")
-  try {
-    cancelledServiceRequest(requestId)
-  }
-  catch {
-    toast.error("Failed to Cancel the request !!!")
-  }
-};
-
-const handleCompletedUser = (requestId: string) => {
-  console.log("about to mark completed the request")
-  try {
-    completedServiceRequest(requestId)
-  }
-  catch {
-    toast.error("Failed to Complete the request !!!")
-  }
-};
-
-
 
 
 const Requests = () => {
+
+  const [disableCompletButton , setDisableCompletButton] = useState(false)
 
   const nav = useNavigate();
 
@@ -123,6 +113,26 @@ const Requests = () => {
       toast.info(`Contacting user at ${user.phoneNumber}`);
     } else {
       toast.warning("Phone number not available");
+    }
+  };
+
+  const handleCancleUser = (requestId: string) => {
+    console.log("about to cancel the request")
+    try {
+      cancelledServiceRequest(requestId)
+    }
+    catch {
+      toast.error("Failed to Cancel the request !!!")
+    }
+  };
+
+  const handleCompletedUser = (requestId: string) => {
+    console.log("about to mark completed the request")
+    try {
+      completedServiceRequest(requestId)
+    }
+    catch {
+      toast.error("Failed to Complete the request !!!")
     }
   };
 
@@ -308,6 +318,32 @@ const Requests = () => {
 
                                 </div>
                               )}
+                            </div>
+                          )}
+                          {!isMechanic && request.status === 'mechanic have completed' && (
+                            <div className="flex space-x-2">
+
+                              <div className="space-x-2">
+                                <Button
+                                  className="bg-green-400"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleCompletedUser(request["_id"])}
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Completed
+                                </Button>
+                              </div>
+                              <div className="space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleContactUser(request.assignedTo)}
+                                >
+                                  <Phone className="h-4 w-4 mr-1" />
+                                  Contact Mechanic
+                                </Button>
+                              </div>
                             </div>
                           )}
                         </TableCell>
