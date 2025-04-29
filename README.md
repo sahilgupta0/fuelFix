@@ -26,11 +26,17 @@
 
 ---
 
-## 🛠️ Tech Stack
 
-| Frontend | Backend | Database | Notifications |
-|----------|---------|----------|----------------|
-| React | Node.js + Express.js | MongoDB | Firebase Cloud Messaging |
+## 🛠 Tech Stack
+
+| Layer     | Technology            |
+|-----------|------------------------|
+| Frontend  | React Native           |
+| Backend   | Node.js, Express       |
+| Database  | MongoDB / MongoDB Atlas |
+| Maps      | Google Maps API        |
+| Messaging | Firebase Cloud Messaging |
+| Auth      | JWT Authentication     |
 
 ---
 
@@ -41,3 +47,18 @@
 ```bash
 git clone https://github.com/sahilgupta0/fuelFix.git
 cd fuelfix
+
+### 2. open two terminal
+
+### 3. Change the directory
+
+```bash
+cd backend
+cd frontend
+
+### 4. Install dependecies for both folder
+npm i
+
+### 5. Run the server and frontend 
+npm run dev
+
