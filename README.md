@@ -47,7 +47,7 @@
 ```bash
 git clone https://github.com/sahilgupta0/fuelFix.git
 cd fuelfix
-
+```
 ### 2. open two terminal
 
 ### 3. Change the directory
@@ -55,10 +55,12 @@ cd fuelfix
 ```bash
 cd backend
 cd frontend
-
+```
 ### 4. Install dependecies for both folder
+```bash
 npm i
-
+```
 ### 5. Run the server and frontend 
+```bash
 npm run dev
-
+```
