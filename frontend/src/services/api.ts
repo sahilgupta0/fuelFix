@@ -4,6 +4,7 @@ import axios from 'axios';
 export interface SignupData {
   name: string;
   email: string;
+  re_password:string;
   password: string;
   address: string;
   phoneNumber: string;
@@ -117,6 +118,10 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
   // Simulate error for invalid credentials
   throw new Error('Invalid credentials');
 };
+
+export const sendOtp = async () =>{
+  const response = await axios.post(`${import.meta.env.VITE_PROXY_URL}api/requests`);
+}
 
 // Service requests API functions
 export const createServiceRequest = async (data: CreateRequestData): Promise<ServiceRequest> => {

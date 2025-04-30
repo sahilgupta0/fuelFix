@@ -25,10 +25,16 @@ const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  re_password: z.string().min(6, { message: "Please re-enter your password" }),
   address: z.string().min(5, { message: "Address is required" }),
   phoneNumber: z.string().min(10, { message: "Please enter a valid phone number" }),
   userType: z.enum(["user", "mechanic"], { required_error: "Please select a user type" }),
-});
+  otp: z.string().min(6, { message: "OTP is required" }),
+})
+  .refine((data) => data.password === data.re_password, {
+    path: ["re_password"], // This tells Zod where the error should appear
+    message: "Passwords do not match",
+  });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -36,7 +42,13 @@ const Signup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
+
+
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -44,6 +56,7 @@ const Signup = () => {
       name: "",
       email: "",
       password: "",
+      re_password: "",
       address: "",
       phoneNumber: "",
       userType: "user",
@@ -55,11 +68,83 @@ const Signup = () => {
     return await axios.post(`${import.meta.env.VITE_PROXY_URL}api/signup`, data);
   };
 
+
+  const handleSendOtp = async () => {
+    const email = form.getValues("email");
+    const name = form.getValues("name");
+    const password = form.getValues("password");
+    const re_password = form.getValues("re_password");
+    const address = form.getValues("address");
+    const phoneNumber = form.getValues("phoneNumber");
+
+    
+    if(email == "" || name == "" || password == "" || re_password == "" || address =="" || phoneNumber == ""){
+      toast.error("Please fill all the details")
+      return 
+    }
+    if(password != re_password){
+      toast.error("Password doesn't match")
+      return
+    }
+
+    try {
+      setOtpLoading(true);
+      const response = await axios.post(`${import.meta.env.VITE_PROXY_URL}api/otp/send`, { 'email': email });
+
+      if (response.status == 200) {
+        toast.success("OTP send successfully!");
+        setIsOtpSent(true);
+      }
+
+      
+    } catch (error) {
+      console.error(error);
+      form.setError("email", { message: "Could not send OTP. Try again." });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+
+  const handleVerifyOtp = async () => {
+    const email = form.getValues("email");
+    const otp = form.getValues("otp");
+
+
+    if (!email) {
+      form.setError("email", { message: "Please enter your email first" });
+      return;
+    }
+
+    try {
+      setVerifyLoading(true);
+      const data = {
+        'email': email,
+        'otp': otp
+      }
+      const response = await axios.post(`${import.meta.env.VITE_PROXY_URL}api/otp/verify`, data);
+
+      if (response.status == 200) {
+        toast.success("OTP verified successfully!");
+        setIsOtpVerified(true)
+      }
+      else {
+        console.log(response)
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("OTP doesn't match")
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
-    
+
     try {
-      
+
       // Show success toast
       console.log("Entering in the sign up")
 
@@ -75,7 +160,7 @@ const Signup = () => {
       } else {
         toast.error("Unexpected error occurred.");
       }
-      
+
       // Redirect to login after a short delay
       setTimeout(() => {
         navigate("/login");
@@ -94,7 +179,7 @@ const Signup = () => {
         toast.error("Network error. Please check your internet connection.");
         console.error("Network error:", error);
       }
-    }  finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -141,7 +226,24 @@ const Signup = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="example@email.com" {...field} />
+                      <div className="flex gap-2">
+                        <Input type="email" placeholder="example@email.com" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="******" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -150,10 +252,10 @@ const Signup = () => {
 
               <FormField
                 control={form.control}
-                name="password"
+                name="re_password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Re-Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="******" {...field} />
                     </FormControl>
@@ -216,14 +318,42 @@ const Signup = () => {
                   </FormItem>
                 )}
               />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? "Creating Account..." : "Create Account"}
+              {isOtpSent && (
+                <FormField
+                  control={form.control}
+                  name="otp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Enter OTP</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-2">
+                          <Input placeholder="Enter 6-digit OTP" {...field} />
+                          <Button type="button" onClick={handleVerifyOtp} disabled={verifyLoading}>
+                            {verifyLoading ? "Verifying..." : "Verify OTP"}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {!isOtpSent && (
+                <Button type="button" className="w-full" onClick={handleSendOtp} disabled={otpLoading || isOtpSent}>
+                {otpLoading ? "Sending..." : "Send OTP"}
               </Button>
+              )
+              }
+              {isOtpSent && (
+                  <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || !isOtpVerified}
+                >
+                  {isLoading ? "Creating Account..." : "Create Account"}
+                </Button>
+
+              )}
             </form>
           </Form>
         </div>
