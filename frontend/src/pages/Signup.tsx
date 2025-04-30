@@ -328,7 +328,7 @@ const Signup = () => {
                       <FormControl>
                         <div className="flex gap-2">
                           <Input placeholder="Enter 6-digit OTP" {...field} />
-                          <Button type="button" onClick={handleVerifyOtp} disabled={verifyLoading}>
+                          <Button type="button" onClick={handleVerifyOtp} disabled={verifyLoading || isOtpVerified}>
                             {verifyLoading ? "Verifying..." : "Verify OTP"}
                           </Button>
                         </div>

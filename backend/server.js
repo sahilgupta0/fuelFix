@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('./models/User');
 const Request = require('./models/Request');
-const Mechanic = require('./models/Mechanic')
+const Mechanic = require('./models/Mechanic');
+const Otp = require('./models/Otp')
 const path = require('path');
 const app = express();
 
@@ -72,10 +73,11 @@ app.get('/', (req, res) => {
 
 // ----------------FrontEnd call it to send the OTP--------------------------
 
-let otpData = {};
 
 
 app.post('/api/otp/send', (req, res) => {
+
+  const { email } = req.body;
 
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -92,9 +94,6 @@ app.post('/api/otp/send', (req, res) => {
     return Math.floor(100000 + Math.random() * 900000);
   }
 
-  otpData = {};
-
-  const { email } = req.body;
 
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
@@ -102,13 +101,7 @@ app.post('/api/otp/send', (req, res) => {
   const otp = generateOtp();
   console.log(otp)
   console.log("the email is :", email)
-  otpData[email] = {
-    otp,
-    verified: false,
-    timestamp: Date.now()
-  };
 
-  console.log(otpData)
 
   // Email configuration
   const SendEmail = async () => {
@@ -122,6 +115,7 @@ app.post('/api/otp/send', (req, res) => {
       })
 
       console.log("OTP send succuessfully")
+      const newOtp = await Otp.create({email, otp})
 
       res.status(200).json(info)
     }
@@ -138,19 +132,27 @@ app.post('/api/otp/send', (req, res) => {
 });
 
 
-app.post('/api/otp/verify', (req, res) => {
+app.post('/api/otp/verify', async (req, res) => {
   const { email, otp } = req.body;
 
   //check if user exists
-  if (!otpData[email]) {
+  const otpData = await Otp.findOne({email})
+
+  if(otpData.verified == true){
+    res.status(200)
+  }
+
+  if (!otpData.email) {
     console.log("user not found")
     return res.status(400).json({
       message : 'User not found'
     });
   }
 
+
   // Check if OTP is correct
-  if (otpData[email].otp === parseInt(otp)) {
+  if (otpData.otp === parseInt(otp)) {
+    otpData.verified = true
     return res.status(200).json({
       message: 'OTP verified successfully'
   });
