@@ -152,7 +152,8 @@ const RequestService = () => {
             longitude: position.coords.longitude,
           };
           setLocation(newLocation);
-          console.log("Location fetched:", newLocation);
+          console.log("Location fetched is :", newLocation);
+
           toast.success("Location fetched successfully!");
         },
         (error) => {
