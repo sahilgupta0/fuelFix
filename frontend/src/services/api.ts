@@ -49,6 +49,7 @@ export interface CreateRequestData {
   vehicleType: "car" | "motorbike";
   serviceType: "flatTire" | "fuel" | "engine" | "spark" | "oilLeakage";
   description: string;
+  destination: string;
   image?: string;
 }
 
@@ -174,8 +175,9 @@ export const getMyServiceRequests = async (): Promise<ServiceRequest[]> => {
 export const acceptServiceRequest = async (requestId: string): Promise<ServiceRequest> => {
   // Simulate API call
 
-  console.log("from frontend api  this is the requestId: ", requestId)
-  console.log(`${import.meta.env.VITE_PROXY_URL}api/requests/${requestId}/accept`)
+  // console.log("from frontend api  this is the requestId: ", requestId)
+  // console.log(`${import.meta.env.VITE_PROXY_URL}api/requests/${requestId}/accept`)
+  
   const storedToken = localStorage.getItem('authToken');
   const response = await axios.get(`${import.meta.env.VITE_PROXY_URL}api/requests/${requestId}/accept`, {
     headers: {
@@ -183,7 +185,7 @@ export const acceptServiceRequest = async (requestId: string): Promise<ServiceRe
     }
   });
 
-  console.log(response.data)
+  console.log("this is the accepted response data : ", response.data)
 
   // Simulate successful response
   return response.data; 

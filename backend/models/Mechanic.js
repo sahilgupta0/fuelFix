@@ -39,6 +39,16 @@ const MechanicSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  location: {
+    latitude: {
+      type: Number,
+      required: false,
+    },
+    longitude: {
+      type: Number,
+      required: false,
+    },
   }
 });
 

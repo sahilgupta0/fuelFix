@@ -29,6 +29,13 @@ const RequestSchema = new mongoose.Schema({
     enum: ['pending', 'accepted','user have completed', 'mechanic have completed', 'completed', 'cancelled'],
     default: 'pending'
   },
+  destination: {
+    type: String,
+    required: [true, 'Please provide a location']
+  },
+  source:{
+    type: String,
+  },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Mechanic'

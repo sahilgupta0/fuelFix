@@ -10,11 +10,15 @@ const Mechanic = require('./models/Mechanic');
 const Otp = require('./models/Otp')
 const path = require('path');
 const app = express();
+const mapRoutes = require('./routes/map.routes')
+
 
 //for otp
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const { timeStamp } = require('console');
+
+
 
 
 // ------------------------------Middleware-----------------------
@@ -23,6 +27,24 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
+
+//------------send all the maps related routes to the mapRoutes----------------
+
+app.use('/maps', mapRoutes);
+
+
+
+// ------------------------socket.io-----------------
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app); // Use the same app instance
+const io = new Server(server, {
+  cors: {
+    origin: '*', // Replace with your frontend URL in production
+  },
+});
 
 
 // ----------------------Connect to MongoDB------------------------------
@@ -71,6 +93,12 @@ app.get('/', (req, res) => {
 
 
 
+
+
+// ------------------Map---------------------------
+
+
+
 // ----------------FrontEnd call it to send the OTP--------------------------
 
 
@@ -88,8 +116,8 @@ app.post('/api/otp/send', (req, res) => {
       pass: process.env.MAIL_PASS // Your Gmail password
     }
   });
-  
-  
+
+
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000);
   }
@@ -108,18 +136,18 @@ app.post('/api/otp/send', (req, res) => {
     try {
 
       const info = await transporter.sendMail({
-        from: `"Fule Fix" <${process.env.MAIL_USER}>`, 
+        from: `"Fule Fix" <${process.env.MAIL_USER}>`,
         to: email,
         subject: 'Email Verification OTP',
         text: `Thank you for choosing FuleFix\n\nYour OTP for email verification is: ${otp}`
       })
 
       console.log("OTP send succuessfully")
-      const newOtp = await Otp.create({email, otp})
+      const newOtp = await Otp.create({ email, otp })
 
       res.status(200).json(info)
     }
-    catch(error){
+    catch (error) {
       res.status(500).json({
         message: "server error"
       })
@@ -136,16 +164,16 @@ app.post('/api/otp/verify', async (req, res) => {
   const { email, otp } = req.body;
 
   //check if user exists
-  const otpData = await Otp.findOne({email})
+  const otpData = await Otp.findOne({ email })
 
-  if(otpData.verified == true){
+  if (otpData.verified == true) {
     res.status(200)
   }
 
   if (!otpData.email) {
     console.log("user not found")
     return res.status(400).json({
-      message : 'User not found'
+      message: 'User not found'
     });
   }
 
@@ -155,7 +183,7 @@ app.post('/api/otp/verify', async (req, res) => {
     otpData.verified = true
     return res.status(200).json({
       message: 'OTP verified successfully'
-  });
+    });
   } else {
     return res.status(401).send('Invalid OTP');
   }
@@ -320,12 +348,13 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
 
   try {
 
-    const { vehicleType, serviceType, description, image } = req.body;
+    const { vehicleType, serviceType, description, image, destination } = req.body;
     const newRequest = await Request.create({
       user: req.user.id,
       vehicleType,
       serviceType,
       description,
+      destination,
       image,
       status: 'pending'
     });
@@ -400,14 +429,13 @@ app.get('/api/myrequests', authenticateToken, async (req, res) => {
 
 app.get('/api/requests/:id/accept', authenticateToken, async (req, res) => {
   try {
+    console.log("in the accept request section")
     // Only mechanics can accept requests
     if (req.user.userType !== 'mechanic') {
       return res.status(403).json({ message: 'Only mechanics can accept requests' });
     }
 
     const request = await Request.findById(req.params.id);
-
-
     if (!request) {
       return res.status(404).json({ message: 'Request not found' });
     }
@@ -416,11 +444,28 @@ app.get('/api/requests/:id/accept', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Request is not in pending state' });
     }
 
+    console.log("the request  ", request)
+
+    console.log("the request status before ", request.status)
+
     request.status = 'accepted';
+
+    console.log("the request status after ", request.status)
+
     request.assignedTo = req.user.id;
     await request.save();
 
-    res.status(200).json({ message: 'Request accepted', request });
+    const mechanic = await Mechanic.findById(req.user.id);
+
+    res.status(200).json({
+      message: 'Request accepted',
+      request,
+      mechanicLocation: {
+        latitude: mechanic.location?.latitude,
+        longitude: mechanic.location?.longitude,
+      },
+    });
+
   } catch (error) {
     console.error('Accept request error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -499,6 +544,9 @@ app.put('/api/myrequests/:id/completed', authenticateToken, async (req, res) => 
 
 
 
+
+
+
 // ------------to avoid reload redirecting to homePage---------------------
 
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -509,4 +557,6 @@ app.get('*', (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+

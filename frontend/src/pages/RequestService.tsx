@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,6 +38,7 @@ import {
 } from "./../components/ui/select";
 
 import { createServiceRequest, CreateRequestData } from "./../services/api";
+import axios from "axios";
 
 const formSchema = z.object({
   vehicleType: z.enum(["car", "motorbike"], {
@@ -65,6 +66,53 @@ const RequestService = () => {
     },
   });
 
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [address, setAddress] = useState("");
+
+  const [suggestions, setSuggestions] = useState<string[]>([]); // Suggestions list
+  const [isFetching, setIsFetching] = useState(false); // Loading state for suggestions
+
+
+
+  const fetchSuggestions = async (input: string) => {
+    console.log("Fetching suggestions for:", input);
+    if (!input) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_PROXY_URL}maps/get-suggestions?input=${input}`);
+      setSuggestions(response.data.data.suggestions.map((s: any) => s.description));
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      toast.error("Failed to fetch suggestions.");
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  // Debounce the API call to avoid excessive requests
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSuggestions(address);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [address]);
+
+  const handleAddressSelect = (selectedAddress: string) => {
+    setAddress(selectedAddress);
+    setSuggestions([]); // Clear suggestions after selection
+  };
+
+
   const mutation = useMutation({
     mutationFn: (data: CreateRequestData) => createServiceRequest(data),
     onSuccess: () => {
@@ -89,14 +137,58 @@ const RequestService = () => {
     }
   };
 
-  const onSubmit = (values: FormValues) => {
+
+  const getUserLocation = () => {
+    setUseCurrentLocation(!useCurrentLocation)
+    if (useCurrentLocation) {
+      return;
+    }
+    setAddress("");
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          setLocation(newLocation);
+          toast.success("Location fetched successfully!");
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+          toast.error("Failed to fetch location. Please enable location services.");
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser.");
+    }
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    if (location && address.trim() === "") {
+      toast.error("Location is required to submit the request.");
+      return;
+    }
+    let lat;
+    let long;
+    if (location) {
+      lat = location.latitude;
+      long = location.longitude;
+    }
+    if (address.trim() !== "") {
+      const coordinates = await axios.get(`${import.meta.env.VITE_PROXY_URL}maps/coordinates?address=${address}`)
+      lat = coordinates.data.data.coordinates.latitude;
+      long = coordinates.data.data.coordinates.longitude;
+    }
+
     const requestData: CreateRequestData = {
       vehicleType: values.vehicleType,
       serviceType: values.serviceType,
       description: values.description,
+      destination: `${lat},${long}` || 'birgunj', // Example destination
       image: imagePreview || undefined,
     };
-    
+
     mutation.mutate(requestData);
   };
 
@@ -115,6 +207,46 @@ const RequestService = () => {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <FormLabel>Address</FormLabel>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        type="text"
+                        placeholder="Enter your address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        disabled={useCurrentLocation} // Disable input if toggle is on
+                      />
+                      <Button
+                        type="button"
+                        variant={useCurrentLocation ? "default" : "outline"}
+                        onClick={() => getUserLocation()}
+                      >
+                        {useCurrentLocation ? "Using Current Location" : "Use Current Location"}
+                      </Button>
+                    </div>
+                    {useCurrentLocation && location && (
+                      <p className="text-sm text-gray-500">
+                        Current Location: {location.latitude}, {location.longitude}
+                      </p>
+                    )}
+
+                    {isFetching && <p className="text-sm text-gray-500">Fetching suggestions...</p>}
+                    {suggestions.length > 0 && (
+                      <ul className="border border-gray-300 rounded-md shadow-md bg-white max-h-40 overflow-y-auto">
+                        {suggestions.map((suggestion, index) => (
+                          <li
+                            key={index}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleAddressSelect(suggestion)}
+                          >
+                            {suggestion}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="vehicleType"
@@ -145,7 +277,7 @@ const RequestService = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="serviceType"
@@ -192,6 +324,8 @@ const RequestService = () => {
                     </FormItem>
                   )}
                 />
+
+
 
                 <div className="space-y-3">
                   <FormLabel>Upload Image (Optional)</FormLabel>
@@ -248,8 +382,8 @@ const RequestService = () => {
             >
               Cancel
             </Button>
-            <Button 
-              onClick={form.handleSubmit(onSubmit)} 
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
               disabled={mutation.isPending}
             >
               {mutation.isPending ? (

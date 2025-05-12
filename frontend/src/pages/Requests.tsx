@@ -1,9 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./../contexts/AuthContext";
-import { Phone, CheckCircle, AlertCircle, X, Check } from "lucide-react";
+import { Phone, CheckCircle, AlertCircle, X, Check, Eye } from "lucide-react";
 import { toast } from "sonner";
 import React, { useState } from 'react';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
+import { io } from 'socket.io-client';
 
 import Navbar from "./../components/Navbar";
 import { Button } from "./../components/ui/button";
@@ -27,6 +29,7 @@ import { Badge } from "./../components/ui/badge";
 import { getServiceRequests, acceptServiceRequest, ServiceRequest, User, completedServiceRequest, canceledServiceRequest } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -68,20 +71,36 @@ const isUserObject = (user: User | string): user is User => {
   return typeof user !== 'string';
 };
 
-
+const isRequestObject = (request: Request | string): request is Request => {
+  return typeof request !== 'string';
+};
 
 
 const Requests = () => {
 
-  const [disableCompletButton , setDisableCompletButton] = useState(false)
+  const { user } = useAuth();
+  const [disableCompletButton, setDisableCompletButton] = useState(false)
+  const [mechanicLocation, setMechanicLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
+
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
 
   const nav = useNavigate();
+
+
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: import.meta.env.GOOGLE_MAP_API || '', // Add your API key here
+  });
 
   const handnewClick = () => {
     nav('/requestservice')
   }
 
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const isMechanic = user?.userType === "mechanic";
 
@@ -97,12 +116,21 @@ const Requests = () => {
       queryClient.invalidateQueries({ queryKey: ['serviceRequests'] });
     },
     onError: () => {
+      console.log("in the mutation");
       toast.error("Failed to accept request. Please try again.");
     },
   });
 
   const handleAcceptRequest = (requestId: string) => {
-    acceptMutation.mutate(requestId);
+    acceptMutation.mutate(requestId, {
+      onSuccess: () => {
+        toast.success("Request accepted successfully! Mechanic's location is now visible.");
+      },
+      onError: () => {
+        toast.error("Failed to accept request. Please try again.");
+      },
+    });
+
   };
 
   const handleContactUser = (user: User | string) => {
@@ -115,8 +143,41 @@ const Requests = () => {
   };
 
 
+    const getMechanicLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const newLocation = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+            setLocation(newLocation);
+            toast.success("Location fetched successfully!");
+            console.log("Location of mechanic is :", newLocation.latitude, newLocation.longitude);
+          },
+          (error) => {
+            console.error("Error fetching location:", error);
+            toast.error("Failed to fetch location. Please enable location services.");
+          }
+        );
+      } else {
+        toast.error("Geolocation is not supported by your browser.");
+      }
+    };
+
+  const handleViewUser = (request: Request | string) => {
+    // In a real app, this would open a modal or navigate to a user profile
+    if (isRequestObject(request)) {
+      console.log("Viewing Request Info :", request);
+      getMechanicLocation();
+    } else {
+      toast.warning("Request not available");
+    }
+  };
+
+
   const cancelMutation = useMutation({
-    mutationFn: (requestId: string) =>  canceledServiceRequest(requestId),
+    mutationFn: (requestId: string) => canceledServiceRequest(requestId),
     onSuccess: () => {
       toast.success("Request canceled successfully!");
       queryClient.invalidateQueries({ queryKey: ['serviceRequests'] });
@@ -127,12 +188,12 @@ const Requests = () => {
   });
 
   const handleCancelUser = (requestId: string) => {
-      cancelMutation.mutate(requestId)
+    cancelMutation.mutate(requestId)
   };
 
 
   const completeMutation = useMutation({
-    mutationFn: (requestId: string) =>  completedServiceRequest(requestId),
+    mutationFn: (requestId: string) => completedServiceRequest(requestId),
     onSuccess: () => {
       toast.success("Request Completed successfully!");
       queryClient.invalidateQueries({ queryKey: ['serviceRequests'] });
@@ -144,7 +205,7 @@ const Requests = () => {
 
 
   const handleCompletedUser = (requestId: string) => {
-      completeMutation.mutate(requestId)
+    completeMutation.mutate(requestId)
   };
 
   const formatDate = (dateString: string) => {
@@ -258,10 +319,10 @@ const Requests = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleContactUser(request.user)}
+                                onClick={() => handleViewUser(request)}
                               >
-                                <Phone className="h-4 w-4 mr-1" />
-                                Contact
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
                               </Button>
                             </div>
                           )}
@@ -270,10 +331,10 @@ const Requests = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleContactUser(request.user)}
+                                onClick={() => handleViewUser(request)}
                               >
-                                <Phone className="h-4 w-4 mr-1" />
-                                Contact
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
                               </Button>
                             </div>
                           )}
@@ -283,7 +344,7 @@ const Requests = () => {
                                 className="bg-red-400"
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleCancleUser(request["_id"])}
+                                onClick={() => handleCancelUser(request["_id"])}
                               >
                                 <X className="h-4 w-4 mr-1" />
                                 Cancel
@@ -381,9 +442,27 @@ const Requests = () => {
             )}
           </CardContent>
         </Card>
+
+        {mechanicLocation && isLoaded && (
+          <GoogleMap
+            center={{ lat: mechanicLocation.latitude, lng: mechanicLocation.longitude }}
+            zoom={15}
+            mapContainerStyle={{ width: '100%', height: '400px' }}
+          >
+            <Marker position={{ lat: mechanicLocation.latitude, lng: mechanicLocation.longitude }} />
+          </GoogleMap>
+        )}
+
       </main>
+
+
+
     </div>
   );
 };
 
 export default Requests;
+// function useEffect(arg0: () => (() => void) | undefined, arg1: any[]) {
+//   throw new Error("Function not implemented.");
+// }
+
