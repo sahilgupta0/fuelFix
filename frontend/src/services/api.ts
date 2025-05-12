@@ -230,3 +230,17 @@ export const completedServiceRequest = async (requestId: string): Promise<Servic
   // Simulate successful response
   return response.data; 
 };
+
+
+export const getDirection = async (requestId:string , source: string): Promise<any> => {
+  const storedToken = localStorage.getItem('authToken');
+  const response = await axios.get(`${import.meta.env.VITE_PROXY_URL}maps/get-directions?source=${source}&requestId=${requestId}`);
+  if(response.status !== 200) {
+    throw new Error("Error fetching directions");
+  }
+
+  // console.log("this is the direction response data : ", response)
+
+  // Simulate successful response
+  return response; 
+}

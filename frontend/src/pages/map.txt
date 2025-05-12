@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plot Route on Map</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Route on Map</h1>
+    <div id="map"></div>
+
+    <script>
+        let map;
+        let routePolyline;
+
+        function initMap() {
+            // Replace with the coordinates you want to center the map on initially
+            const initialCenter = { lat: 37.7749, lng: -122.4194 }; // Example: San Francisco
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: initialCenter,
+                zoom: 12, // Adjust zoom level as needed
+            });
+
+            // --- This is where you would get your route data from the Routes API ---
+            // For this example, we'll use a placeholder polyline.
+            // In a real application, you would make an API call and get the polyline
+            // from the response.
+            const placeholderPolyline = "YOUR_ENCODED_POLYLINE_FROM_ROUTES_API"; // Replace with your actual polyline
+
+            // Decode the polyline and draw it on the map
+            drawRoute(placeholderPolyline);
+
+            // --- Optional: Add markers for origin and destination ---
+            // You would get the coordinates for your origin and destination from your
+            // Routes API response or your initial input.
+            const originCoords = { lat: 37.7749, lng: -122.4194 }; // Example origin
+            const destinationCoords = { lat: 34.0522, lng: -118.2437 }; // Example destination
+
+            addMarker(originCoords, "Origin");
+            addMarker(destinationCoords, "Destination");
+
+            // Optional: Fit the map bounds to the polyline
+            fitBoundsToPolyline(placeholderPolyline);
+        }
+
+        function drawRoute(encodedPolyline) {
+            if (routePolyline) {
+                routePolyline.setMap(null); // Remove previous polyline if exists
+            }
+
+            routePolyline = new google.maps.Polyline({
+                path: google.maps.geometry.encoding.decodePath(encodedPolyline),
+                geodesic: true,
+                strokeColor: "#FF0000", // Red color for the route
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+            });
+
+            routePolyline.setMap(map);
+        }
+
+        function addMarker(location, title) {
+            new google.maps.Marker({
+                position: location,
+                map: map,
+                title: title,
+            });
+        }
+
+        function fitBoundsToPolyline(encodedPolyline) {
+            const bounds = new google.maps.LatLngBounds();
+            const path = google.maps.geometry.encoding.decodePath(encodedPolyline);
+
+            for (let i = 0; i < path.length; i++) {
+                bounds.extend(path[i]);
+            }
+
+            map.fitBounds(bounds);
+        }
+    </script>
+
+    <!-- Replace YOUR_API_KEY with your actual Google Maps JavaScript API key -->
+    <!-- Make sure to enable the Maps JavaScript API and the Geometry library in your Google Cloud project -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&libraries=geometry" async defer></script>
+</body>
+</html>

@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./../contexts/AuthContext";
 import { Phone, CheckCircle, AlertCircle, X, Check, Eye } from "lucide-react";
 import { toast } from "sonner";
-import React, { useState } from 'react';
-import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
-import { io } from 'socket.io-client';
+import React, { useEffect, useState } from 'react';
+import { GoogleMap, LoadScript, DirectionsRenderer, DirectionsService, Marker, Polyline } from '@react-google-maps/api';
+
 
 import Navbar from "./../components/Navbar";
 import { Button } from "./../components/ui/button";
@@ -26,9 +26,11 @@ import {
   TableRow,
 } from "./../components/ui/table";
 import { Badge } from "./../components/ui/badge";
-import { getServiceRequests, acceptServiceRequest, ServiceRequest, User, completedServiceRequest, canceledServiceRequest } from "./../services/api";
+import { getServiceRequests, acceptServiceRequest, ServiceRequest, User, completedServiceRequest, canceledServiceRequest, getDirection } from "./../services/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import router from "../../../backend/routes/map.routes";
 
 
 const getStatusBadge = (status: string) => {
@@ -78,31 +80,50 @@ const isRequestObject = (request: Request | string): request is Request => {
 
 const Requests = () => {
 
+  const GOOGLE_MAPS_API_KEY = import.meta.env.GOOGLE_MAP_API
+
   const { user } = useAuth();
-  const [disableCompletButton, setDisableCompletButton] = useState(false)
-  const [mechanicLocation, setMechanicLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [requestId, setRequestId] = useState<string | null>(null);
+  const [mechanicLocation, setMechanicLocation] = useState<{ latitude: number; longitude: number }>({
+  latitude: 0,
+  longitude: 0,
+});
+  const [view, setView] = useState(false);
+  const [directions, setDirections] = useState<{ lat: number; lng: number }[] | null>(null);
+  const [time, setTime] = useState(null);
+  const [distance, setDistance] = useState(null);
+  const [destination, setDestination] = useState<{ latitude: number; longitude: number }>({
+  latitude: 0,
+  longitude: 0,
+});
+  const [map, setMap] = useState(null);
+  const [polyline, setPolyline] = useState("");
 
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
 
+  const placeholderPolyline = polyline;
+
+
+  const decodedPath = window.google?.maps.geometry.encoding.decodePath(placeholderPolyline);
+
+  const onLoad = (mapInstance) => {
+    setMap(mapInstance);
+
+    // Fit the map bounds to the polyline
+    if (decodedPath) {
+      const bounds = new window.google.maps.LatLngBounds();
+      decodedPath.forEach((point) => bounds.extend(point));
+      mapInstance.fitBounds(bounds);
+    }
+  };
 
   const nav = useNavigate();
 
 
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: import.meta.env.GOOGLE_MAP_API || '', // Add your API key here
-  });
+  const queryClient = useQueryClient();
+  const isMechanic = user?.userType === "mechanic";
 
   const handnewClick = () => {
     nav('/requestservice')
   }
-
-  const queryClient = useQueryClient();
-  const isMechanic = user?.userType === "mechanic";
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['serviceRequests'],
@@ -142,39 +163,80 @@ const Requests = () => {
     }
   };
 
+  useEffect(() => {
+    getMechanicLocation();
+  }, []);
 
-    const getMechanicLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const newLocation = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            };
-            setLocation(newLocation);
-            toast.success("Location fetched successfully!");
-            console.log("Location of mechanic is :", newLocation.latitude, newLocation.longitude);
-          },
-          (error) => {
-            console.error("Error fetching location:", error);
-            toast.error("Failed to fetch location. Please enable location services.");
-          }
-        );
-      } else {
-        toast.error("Geolocation is not supported by your browser.");
-      }
-    };
 
-  const handleViewUser = (request: Request | string) => {
-    // In a real app, this would open a modal or navigate to a user profile
-    if (isRequestObject(request)) {
-      console.log("Viewing Request Info :", request);
-      getMechanicLocation();
+  const getMechanicLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            latitude: position.coords.latitude,
+
+            longitude: position.coords.longitude,
+          };
+          setMechanicLocation(newLocation);
+
+          toast.success("Location fetched successfully!");
+          console.log("Location of mechanic is :", newLocation.latitude, newLocation.longitude);
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+          toast.error("Failed to fetch location. Please enable location services.");
+        }
+      );
     } else {
-      toast.warning("Request not available");
+      toast.error("Geolocation is not supported by your browser.");
     }
   };
 
+
+  const handleViewUser = async (requestId: string) => {
+    // In a real app, this would open a modal or navigate to a user profile
+    const requestAddress = await axios.get(`${import.meta.env.VITE_PROXY_URL}api/request-location/${requestId}`);
+    // console.log("this is the request address : ", requestAddress.data.);
+    setDestination(requestAddress.data.destination);
+    console.log("this is the request origin : ", requestAddress.data.destination);
+
+    const arr = requestAddress.data.destination?.split(',');
+
+    const lat = arr ? parseFloat(arr[0]) : null;
+    const lng = arr ? parseFloat(arr[1]) : null;
+
+
+
+    if (lat != null && lng != null) {
+      setDestination({
+        latitude: lat,
+        longitude: lng,
+      });
+    }
+
+    setView(true);
+    const routeData = await getDirection(requestId, `${mechanicLocation?.latitude},${mechanicLocation?.longitude}`.toString())
+    const path = routeData.data.directions.steps.map((step: { lat: number; lng: number }) => ({
+      lat: step.lat,
+      lng: step.lng,
+    }));
+
+    // setDirections(path);
+    setTime(routeData.data.directions.duration);
+    setDistance(routeData.data.directions.distance);
+    setPolyline(routeData.data.directions.polyline);
+
+
+
+    console.log("this is the route data : ", routeData.data.directions);
+    console.log("this is the direction: ", path);
+
+    // console.log("this is the route data : ", routeData);
+  };
+
+  const closeModal = () => {
+    setView(false);
+  }
 
   const cancelMutation = useMutation({
     mutationFn: (requestId: string) => canceledServiceRequest(requestId),
@@ -242,6 +304,32 @@ const Requests = () => {
       </div>
     );
   }
+
+  const handleDirectionsRequest = (origin, destination) => {
+    const l = `${origin.latitude},${origin.longitude}`.toString();
+    console.log("this is the origin : ", l);
+    console.log("this is the destination : ", destination);
+    return {
+
+      origin: l, // Convert to string
+      destination: destination, // Convert to string
+      travelMode: "DRIVING",
+    };
+  };
+
+  const handleDirectionsCallback = (response: any) => {
+    if (response !== null) {
+      if (response.status === "OK") {
+        setDirections(response);
+
+      } else {
+        console.error("Error fetching directions:", response);
+      }
+    }
+    else {
+      console.error("Error fetching directions: No response");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -319,7 +407,7 @@ const Requests = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleViewUser(request)}
+                                onClick={() => handleViewUser(request["_id"])}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View
@@ -331,7 +419,7 @@ const Requests = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleViewUser(request)}
+                                onClick={() => handleViewUser(request["_id"])}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 View
@@ -393,6 +481,7 @@ const Requests = () => {
                             </div>
                           )}
                           {!isMechanic && request.status === 'mechanic have completed' && (
+
                             <div className="flex space-x-2">
 
                               <div className="space-x-2">
@@ -443,17 +532,131 @@ const Requests = () => {
           </CardContent>
         </Card>
 
-        {mechanicLocation && isLoaded && (
-          <GoogleMap
-            center={{ lat: mechanicLocation.latitude, lng: mechanicLocation.longitude }}
-            zoom={15}
-            mapContainerStyle={{ width: '100%', height: '400px' }}
-          >
-            <Marker position={{ lat: mechanicLocation.latitude, lng: mechanicLocation.longitude }} />
-          </GoogleMap>
-        )}
-
       </main>
+
+      {view && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={closeModal}
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Location</h2>
+            {mechanicLocation ? (
+              <div className="space-y-4">
+                <p>
+                  <strong>Distance :</strong> {distance}
+                </p>
+                <p>
+                  <strong>Time :</strong> {time}
+                </p>
+                <div className="h-64 w-full">
+                  {/* <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+                    <GoogleMap
+                      center={{
+                        lat: mechanicLocation.latitude,
+                        lng: mechanicLocation.longitude,
+                      }}
+                      zoom={15}
+                      mapContainerStyle={{ width: "100%", height: "100%" }}
+                    >
+                      <Marker
+                        position={{
+                          lat: mechanicLocation.latitude,
+                          lng: mechanicLocation.longitude,
+                        }}
+                      />
+                    </GoogleMap>
+                  </LoadScript> */}
+
+
+                  <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={['geometry']}>
+                    <GoogleMap
+                      mapContainerStyle={{ width: "100%", height: "100%" }}
+                      center={{
+                        lat: (mechanicLocation.latitude + destination.latitude) / 2,
+                        lng: (mechanicLocation.longitude + destination.longitude) / 2,
+                      }}
+                      zoom={15}
+                      onLoad={onLoad}
+                    >
+                      {/* {directions && (
+                      <>
+                        <DirectionsRenderer
+                          directions={{
+                            routes: [
+                              {
+                                legs: [{
+                                  // start_location: center,
+                                  end_location: { lat: 34.0522, lng: -118.2437 },
+                                  steps: directions.map((step, index) => ({
+                                    start_location: step,
+                                    end_location: directions[index + 1] || step,
+                                    travel_mode: 'DRIVING'
+                                  }))
+                                }]
+                              }
+                            ]
+                          }}
+                        />
+                      </>
+                    )} */}
+                      {/* DirectionsRenderer used to display the directions on the map */}
+                      {/* {directions && (
+                        <DirectionsRenderer
+                          directions={{
+                            routes: [
+                              {
+                                legs: [{
+                                  start_location: center,
+                                  end_location: { lat: 34.0522, lng: -118.2437 },
+                                  steps: directions.map((step, index) => ({
+                                    start_location: step,
+                                    end_location: directions[index + 1] || step,
+                                    travel_mode: "DRIVING",  // Travel mode should be defined here
+                                  })),
+                                }]
+                              }
+                            ]
+                          }}
+                        />
+                      )} */}
+
+                      {/* Draw the polyline */}
+                      {decodedPath && (
+                        <Polyline
+                          path={decodedPath}
+                          options={{
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 1.0,
+                            strokeWeight: 2,
+                          }}
+                        />
+                      )}
+
+
+                      {/* Add markers for origin and destination */}
+                      <Marker position={{
+                        lat: mechanicLocation.latitude,
+                        lng: mechanicLocation.longitude,
+                      }} title="Origin" />
+                      <Marker position={{
+                        lat: destination.latitude,
+                        lng: destination.longitude,
+                      }} title="Destination" />
+
+                    </GoogleMap>
+                  </LoadScript>
+                </div>
+              </div>
+            ) : (
+              <p>Loading location...</p>
+            )}
+          </div>
+        </div>
+      )}
 
 
 

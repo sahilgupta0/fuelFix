@@ -7,5 +7,6 @@ const mapController  = require('../controller/map.controller');
 router.get('/coordinates',mapController.getCoordinates);
 router.get('/get-distace-time',mapController.getDistaceTime);
 router.get('/get-suggestions',mapController.getSuggestions);
+router.get('/get-directions',mapController.getDirections);
 
 module.exports = router;

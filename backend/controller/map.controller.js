@@ -2,6 +2,7 @@
 
 
 // import getAddressCoordinates from '../services/map.services.js';
+const Request = require('../models/Request'); 
 const mapService = require('../services/map.services');
 
 module.exports.getCoordinates = async (req, res) => {
@@ -51,4 +52,31 @@ module.exports.getSuggestions = async (req, res) => {
             message: error.message
         });
     } 
+}
+
+module.exports.getDirections = async (req, res) => {
+    const { source, requestId } = req.query;
+    try {
+        const destination  = await Request.findById(requestId).select('destination');
+
+        // const destination = 'birgunj'
+        console.log('Source:', source);
+        console.log('Destination:', destination.destination);
+        try {
+            const directions = await mapService.getDirections(source, destination.destination);
+            // const directions = "working";
+            
+            res.status(200).json({directions});
+        } catch (error) {
+            res.status(500).json({
+                status: 'fail',
+                message: "fail to get directions i m in controller"
+            });
+        } 
+    } catch (error) {
+        res.status(500).json({
+            status: 'fail',
+            message: "fail to get request id"
+        });
+    }
 }

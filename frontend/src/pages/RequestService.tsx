@@ -167,7 +167,7 @@ const RequestService = () => {
   };
 
   const onSubmit = async (values: FormValues) => {
-    if (location && address.trim() === "") {
+    if (location==null && address.trim() === "") {
       toast.error("Location is required to submit the request.");
       return;
     }

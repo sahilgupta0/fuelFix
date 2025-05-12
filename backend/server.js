@@ -56,11 +56,27 @@ mongoose.connect(process.env.MONGODB_URI, {
   .catch(err => console.error('MongoDB connection error:', err));
 
 
+// ----------------------Get Request Location------------------------------
+app.get('/api/request-location/:id', async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    const { destination } = request;
+    res.status(200).json({ destination });
+  } catch (error) {
+    console.error('Get request location error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 
 
 // -----------------------Auth Middleware---------------------------
 const authenticateToken = (req, res, next) => {
-  console.log("in the authorize section")
+  // console.log("in the authorize section")
   const authHeader = req.headers['authorization']; //it can contain many thing so we havve to split the 
   const token = authHeader
 
