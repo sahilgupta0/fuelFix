@@ -248,7 +248,7 @@ const Landing = () => {
       <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">FuelFix in Numbers</h2>
+            <h2 className="text-4xl font-bold mb-4">FuelFix Projected Numbers after 3 years</h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               We're proud of the service we provide to drivers across the country.
             </p>

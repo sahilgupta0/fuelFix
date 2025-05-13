@@ -1,26 +1,52 @@
 
 import Navbar from "./../components/Navbar";
 import ServiceCard from "./../components/ServiceCard";
-import { Wrench, HelpCircle, MapPin } from "lucide-react";
+import { Wrench, HelpCircle, MapPin, MessageCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "./../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import React from 'react';
+import axios from "axios";
+import { toast } from "sonner";
+
 const Index = () => {
   const navigate = useNavigate();
-  
+
+  const { user } = useAuth(); // assuming AuthProvider provides `user`
+
   const services = [
     { title: "Request Service", Icon: Wrench, path: "/requestservice" },
     { title: "Help", Icon: HelpCircle, path: "/help" },
     { title: "Locate Stores", Icon: MapPin, path: "/locate" },
+    { title: "Feedback", Icon: MessageCircle, path: "https://docs.google.com/forms/d/e/1FAIpQLSfu_Wryfw4o3ycOrsWQ2yILwrX_oax_arPWopfaU_bBAaJiGg/viewform?usp=sharing " },
+    { title: "SOS", Icon: AlertTriangle, path: "sendHelp" },
+
   ];
 
-  const handleServiceClick = (path: string) => {
-    navigate(path);
+  const handleServiceClick = async (path: string) => {
+    if (path.startsWith("http")) {
+      // Open external link
+      window.open(path, "_blank");
+    } else {
+      // Navigate within the app
+      if (path === "sendHelp") {
+        // Handle SOS functionality here
+        console.log("user", user);
+        const response = await axios.post(`${import.meta.env.VITE_PROXY_URL}api/sos/send`, {user});
+
+        if (response.status === 200) {
+          toast.success("SOS message sent successfully!");
+        } else {
+          toast.error("Failed to send SOS message.");
+        }
+      } else { 
+        navigate(path);
+      }
+    }
   };
 
-   const { user } = useAuth(); // assuming AuthProvider provides `user`
   
+
 
 
   return (
@@ -43,19 +69,19 @@ const Index = () => {
                 key="schedule"
                 title="My Schedule"
                 Icon={HelpCircle}
-                onClick={() => {}}
+                onClick={() => navigate("/myrequests")}
               />
               <ServiceCard
                 key="tools"
                 title="My Tools"
                 Icon={Wrench}
-                onClick={() => {}}
+                onClick={() => { }}
               />
               <ServiceCard
                 key="location"
                 title="My Location"
                 Icon={MapPin}
-                onClick={() => {}}
+                onClick={() => { }}
               />
             </div>
           </>
