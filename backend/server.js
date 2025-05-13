@@ -116,7 +116,7 @@ app.get('/', (req, res) => {
 app.post('/api/sos/send', (req, res) => {
 
   const email = "sahilroy1918912@gmail.com";
-  const { user } = req.body;
+  const { user, latitude  , longitude } = req.body;
 
 
   const transporter = nodemailer.createTransport({
@@ -217,6 +217,7 @@ app.post('/api/sos/send', (req, res) => {
                     <div class="alert-message">
                       Name: ${user.name}<br>
                       Email: ${user.email}<br>
+                      Location: ${latitude}, ${longitude}<br>
                     </div>
                     <p>If you have received this email in error, please disregard it.</p>
                     <p>Thank you,<br>The Fule Fix Team</p>
@@ -277,6 +278,7 @@ app.post('/api/otp/send', (req, res) => {
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
   }
+  
   const otp = generateOtp();
   console.log(otp)
   console.log("the email is :", email)

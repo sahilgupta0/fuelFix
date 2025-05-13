@@ -4,15 +4,23 @@ import ServiceCard from "./../components/ServiceCard";
 import { Wrench, HelpCircle, MapPin, MessageCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "./../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import React from 'react';
 import axios from "axios";
 import { toast } from "sonner";
 
+
+
 const Index = () => {
   const navigate = useNavigate();
+  const [userloc, setUserloc] = useState<string | null>(null);
+  
+        const  [lat, setLat] = useState<number | null>(null);
+        const  [long, setLong] = useState<number | null>(null);
 
   const { user } = useAuth(); // assuming AuthProvider provides `user`
+
+
 
   const services = [
     { title: "Request Service", Icon: Wrench, path: "/requestservice" },
@@ -31,21 +39,32 @@ const Index = () => {
       // Navigate within the app
       if (path === "sendHelp") {
         // Handle SOS functionality here
-        console.log("user", user);
-        const response = await axios.post(`${import.meta.env.VITE_PROXY_URL}api/sos/send`, {user});
-
-        if (response.status === 200) {
-          toast.success("SOS message sent successfully!");
-        } else {
-          toast.error("Failed to send SOS message.");
+        
+        try {
+          navigator.geolocation.getCurrentPosition( async (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log("Latitude:", latitude);
+            console.log("Longitude:", longitude);
+            const response = await axios.post(`${import.meta.env.VITE_PROXY_URL}api/sos/send`, { user, latitude, longitude });
+            console.log("userloc", userloc);
+            if (response.status === 200) {
+              toast.success("SOS message sent successfully!");
+            } else {
+              toast.error("Failed to send SOS message.");
+            }
+          });
         }
-      } else { 
+        catch (error) {
+          toast.error("Enable location services to use this feature");
+        }
+        console.log("user", user);
+      } else {
         navigate(path);
       }
     }
   };
 
-  
+
 
 
 
