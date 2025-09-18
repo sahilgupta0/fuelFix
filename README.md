@@ -56,7 +56,7 @@ FuelFix/
 
 ### 1️⃣ Clone the repository
 ```bash
-git clone https://github.com/your-username/FuelFix.git
+git clone https://github.com/sahilgupta0/fuleFix.git
 cd FuelFix
 ```
 
