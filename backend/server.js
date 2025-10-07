@@ -14,8 +14,8 @@ const mapRoutes = require('./routes/map.routes')
 
 
 //for otp
-const nodemailer = require('nodemailer');
-const bodyParser = require('body-parser');
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const { timeStamp } = require('console');
 
 
@@ -24,8 +24,6 @@ const { timeStamp } = require('console');
 // ------------------------------Middleware-----------------------
 app.use(express.json());
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 
 
@@ -113,138 +111,120 @@ app.get('/', (req, res) => {
 
 // ------------------SOS EMAIL---------------------------
 
-app.post('/api/sos/send', (req, res) => {
-
+app.post('/api/sos/send', async (req, res) => {
   const email = "sahilroy1918912@gmail.com";
-  const { user, latitude  , longitude } = req.body;
-
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // use TLS
-    auth: {
-      user: process.env.MAIL_USER, // Your Gmail email address
-      pass: process.env.MAIL_PASS // Your Gmail password
-    }
-  });
+  const { user, latitude, longitude } = req.body;
 
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
   }
-  console.log("the email is :", email)
+  console.log("the email is :", email);
 
-
-  // Email configuration
-  const SendEmail = async () => {
-    try {
-
-      const info = await transporter.sendMail({
-        from: `"Fule Fix" <${process.env.MAIL_USER}>`,
-        to: email,
-        subject: 'Need Help',
-        html: `<!DOCTYPE html>
-              <html lang="en">
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>SOS Alert</title>
-                <style>
-                  body {
-                    font-family: Arial, sans-serif;
-                    background-color: #f4f4f4;
-                    margin: 0;
-                    padding: 0;
-                  }
-                  .email-container {
-                    max-width: 600px;
-                    margin: 20px auto;
-                    background-color: #ffffff;
-                    border-radius: 8px;
-                    overflow: hidden;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                  }
-                  .email-header {
-                    background-color: #dc3545;
-                    color: #ffffff;
-                    text-align: center;
-                    padding: 20px;
-                  }
-                  .email-header h1 {
-                    margin: 0;
-                    font-size: 24px;
-                  }
-                  .email-body {
-                    padding: 20px;
-                    color: #333333;
-                    line-height: 1.6;
-                  }
-                  .email-body h2 {
-                    color: #dc3545;
-                    font-size: 20px;
-                  }
-                  .alert-message {
-                    background-color: #f8d7da;
-                    color: #721c24;
-                    font-size: 18px;
-                    font-weight: bold;
-                    padding: 15px;
-                    border-radius: 4px;
-                    margin: 20px 0;
-                    text-align: center;
-                  }
-                  .email-footer {
-                    text-align: center;
-                    padding: 20px;
-                    background-color: #f8f9fa;
-                    color: #666666;
-                    font-size: 14px;
-                  }
-                  .email-footer a {
-                    color: #007bff;
-                    text-decoration: none;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="email-container">
-                  <div class="email-header">
-                    <h1>SOS Alert - Fule Fix</h1>
-                  </div>
-                  <div class="email-body">
-                    <h2>Emergency Assistance Required</h2>
-                    <p>An SOS alert has been triggered by a user. Please respond to this emergency as soon as possible.</p>
-                    <div class="alert-message">
-                      Name: ${user.name}<br>
-                      Email: ${user.email}<br>
-                      Location: ${latitude}, ${longitude}<br>
-                    </div>
-                    <p>If you have received this email in error, please disregard it.</p>
-                    <p>Thank you,<br>The Fule Fix Team</p>
-                  </div>
-                  <div class="email-footer">
-                    <p>&copy; 2025 Fule Fix. All rights reserved.</p>
-                    <p><a href="https://fuelfix.vercel.app">Visit our website</a></p>
-                  </div>
+  const msg = {
+    to: email,
+    from: process.env.MAIL_USER, // Use the email address you verified with SendGrid
+    subject: 'Need Help',
+    html: `<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale-1.0">
+            <title>SOS Alert</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+              }
+              .email-container {
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #ffffff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              }
+              .email-header {
+                background-color: #dc3545;
+                color: #ffffff;
+                text-align: center;
+                padding: 20px;
+              }
+              .email-header h1 {
+                margin: 0;
+                font-size: 24px;
+              }
+              .email-body {
+                padding: 20px;
+                color: #333333;
+                line-height: 1.6;
+              }
+              .email-body h2 {
+                color: #dc3545;
+                font-size: 20px;
+              }
+              .alert-message {
+                background-color: #f8d7da;
+                color: #721c24;
+                font-size: 18px;
+                font-weight: bold;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 20px 0;
+                text-align: center;
+              }
+              .email-footer {
+                text-align: center;
+                padding: 20px;
+                background-color: #f8f9fa;
+                color: #666666;
+                font-size: 14px;
+              }
+              .email-footer a {
+                color: #007bff;
+                text-decoration: none;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="email-container">
+              <div class="email-header">
+                <h1>SOS Alert - Fuel Fix</h1>
+              </div>
+              <div class="email-body">
+                <h2>Emergency Assistance Required</h2>
+                <p>An SOS alert has been triggered by a user. Please respond to this emergency as soon as possible.</p>
+                <div class="alert-message">
+                  Name: ${user.name}<br>
+                  Email: ${user.email}<br>
+                  Location: ${latitude}, ${longitude}<br>
                 </div>
-              </body>
-              </html>`
-      })
+                <p>If you have received this email in error, please disregard it.</p>
+                <p>Thank you,<br>The Fuel Fix Team</p>
+              </div>
+              <div class="email-footer">
+                <p>&copy; 2025 Fuel Fix. All rights reserved.</p>
+                <p><a href="https://fuelfix.vercel.app">Visit our website</a></p>
+              </div>
+            </div>
+          </body>
+          </html>`
+  };
 
-      console.log("SOS send succuessfully")
-
-      res.status(200).json(info)
+  try {
+    await sgMail.send(msg);
+    console.log("SOS send successfully");
+    res.status(200).json({ message: "SOS email sent successfully" });
+  } catch (error) {
+    console.error('Error sending SOS email:', error);
+    if (error.response) {
+      console.error(error.response.body)
     }
-    catch (error) {
-      res.status(500).json({
-        message: "server error"
-      })
-      console.log(error)
-    }
+    res.status(500).json({
+      message: "server error"
+    });
   }
-
-  SendEmail()
-
 });
 
 
@@ -402,37 +382,12 @@ app.post('/api/otp/send', async (req, res) => {
     return res.status(400).json({ message: 'Email is required' });
   }
 
-  // Step 1 — create the transporter
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true for 465, false for 587
-    auth: {
-      user: process.env.MAIL_USER, // your Gmail address
-      pass: process.env.MAIL_PASS, // your Gmail App Password
-    },
-  });
-
-  // Step 2 — verify connection before sending
-  console.log("about to call transporter verify");
-  transporter.verify((error, success) => {
-    console.log("inside transporter verify");
-    if (error) {
-      console.error('SMTP Connection Error:', error.message);
-    } else {
-      console.log('✅ Server is ready to send emails');
-    }
-    console.log("about to leave transporter verify");
-  });
-  console.log("trasnporter verify is called");
-
-  // Step 3 — generate OTP
+  // Step 1 — generate OTP
   const otp = Math.floor(100000 + Math.random() * 900000);
-
   console.log('Generated OTP:', otp);
   console.log('Email:', email);
 
-  // Step 4 — email HTML template
+  // Step 2 — email HTML template
   const htmlTemplate = `
     <!DOCTYPE html>
     <html>
@@ -515,28 +470,31 @@ app.post('/api/otp/send', async (req, res) => {
     </html>
   `;
 
+  // Step 3 — create the message object
+  const msg = {
+    to: email,
+    from: process.env.MAIL_USER, // Use your verified sender
+    subject: 'Email Verification OTP',
+    html: htmlTemplate,
+  };
+
   try {
-    // Step 5 — send email
-    console.log("sending mail");
-    const info = await transporter.sendMail({
-      from: `"Fuel Fix" <${process.env.MAIL_USER}>`,
-      to: email,
-      subject: 'Email Verification OTP',
-      html: htmlTemplate,
-    });
+    // Step 4 — send email
+    await sgMail.send(msg);
+    console.log('✅ Email sent to:', email);
 
-    console.log('✅ Email sent:', info.messageId);
-
-    // Step 6 — save OTP in DB (optional)
+    // Step 5 — save OTP in DB (optional)
     await Otp.create({ email, otp });
 
     return res.status(200).json({
       success: true,
       message: 'OTP sent successfully',
-      info,
     });
   } catch (error) {
     console.error('❌ Error sending OTP:', error.message);
+    if (error.response) {
+      console.error(error.response.body)
+    }
     return res.status(500).json({
       success: false,
       message: 'Failed to send OTP',
@@ -943,5 +901,3 @@ app.get('*', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
