@@ -405,8 +405,8 @@ app.post('/api/otp/send', async (req, res) => {
   // Step 1 — create the transporter
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for 587
+    port: 465,
+    secure: true, // true for 465, false for 587
     auth: {
       user: process.env.MAIL_USER, // your Gmail address
       pass: process.env.MAIL_PASS, // your Gmail App Password
