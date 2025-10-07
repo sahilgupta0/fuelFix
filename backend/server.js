@@ -76,7 +76,7 @@ app.get('/api/request-location/:id', async (req, res) => {
 
 // -----------------------Auth Middleware---------------------------
 const authenticateToken = (req, res, next) => {
-  // console.log("in the authorize section")
+  console.log("in the authorize section")
   const authHeader = req.headers['authorization']; //it can contain many thing so we havve to split the 
   const token = authHeader
 
@@ -255,144 +255,290 @@ app.post('/api/sos/send', (req, res) => {
 
 
 
-app.post('/api/otp/send', (req, res) => {
+// app.post('/api/otp/send', (req, res) => {
 
+//   const { email } = req.body;
+
+//   const transporter = nodemailer.createTransport({
+//     host: 'smtp.gmail.com',
+//     port: 587,
+//     secure: false, // use TLS
+//     auth: {
+//       user: process.env.MAIL_USER, // Your Gmail email address
+//       pass: process.env.MAIL_PASS // Your Gmail password
+//     }
+//   });
+
+
+//   const generateOtp = () => {
+//     return Math.floor(100000 + Math.random() * 900000);
+//   }
+
+
+//   if (!email) {
+//     return res.status(400).json({ message: 'Email is required' });
+//   }
+  
+//   const otp = generateOtp();
+//   console.log(otp)
+//   console.log("the email is :", email)
+
+
+//   // Email configuration
+//   const SendEmail = async () => {
+//     try {
+
+//       const info = await transporter.sendMail({
+//         from: `"Fule Fix" <${process.env.MAIL_USER}>`,
+//         to: email,
+//         subject: 'Email Verification OTP',
+//         html: `
+//           <!DOCTYPE html>
+//           <html>
+//           <head>
+//             <style>
+//                 body {
+//                   font-family: Arial, sans-serif;
+//                   background-color: #f4f4f4;
+//                   margin: 0;
+//                   padding: 0;
+//                 }
+//                 .email-container {
+//                   max-width: 600px;
+//                   margin: 20px auto;
+//                   background-color: #ffffff;
+//                   border-radius: 8px;
+//                   overflow: hidden;
+//                   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+//                 }
+//                 .email-header {
+//                   background-color: #007bff;
+//                   color: #ffffff;
+//                   text-align: center;
+//                   padding: 20px;
+//                 }
+//                 .email-header h1 {
+//                   margin: 0;
+//                   font-size: 24px;
+//                 }
+//                 .email-body {
+//                   padding: 20px;
+//                   color: #333333;
+//                   line-height: 1.6;
+//                 }
+//                 .email-body h2 {
+//                   color: #007bff;
+//                   font-size: 20px;
+//                 }
+//                 .otp-code {
+//                   display: inline-block;
+//                   background-color: #f8f9fa;
+//                   color: #007bff;
+//                   font-size: 24px;
+//                   font-weight: bold;
+//                   padding: 10px 20px;
+//                   border-radius: 4px;
+//                   margin: 20px 0;
+//                 }
+//                 .email-footer {
+//                   text-align: center;
+//                   padding: 20px;
+//                   background-color: #f8f9fa;
+//                   color: #666666;
+//                   font-size: 14px;
+//                 }
+//                 .email-footer a {
+//                   color: #007bff;
+//                   text-decoration: none;
+//                 }
+//               </style>
+
+//           </head>
+//           <body>
+//             <div class="email-container">
+//               <div class="email-header">
+//                 <h1>Fule Fix</h1>
+//               </div>
+//               <div class="email-body">
+//                 <h2>Email Verification</h2>
+//                 <p>Thank you for choosing <strong>Fule Fix</strong>. To complete your email verification, please use the OTP below:</p>
+//                 <div class="otp-code">${otp}</div>
+//                 <p>If you did not request this verification, please ignore this email.</p>
+//                 <p>Thank you,<br>The Fule Fix Team</p>
+//               </div>
+//               <div class="email-footer">
+//                 <p>&copy; 2025 Fule Fix. All rights reserved.</p>
+//                 <p><a href="https://fuelfix.vercel.app">Visit our website</a></p>
+//               </div>
+//             </div>
+//           </body>
+//           </html>
+//         `,
+//       })
+
+//       console.log("OTP send succuessfully")
+//       const newOtp = await Otp.create({ email, otp })
+
+//       res.status(200).json(info)
+//     }
+//     catch (error) {
+//       res.status(500).json({
+//         message: "server error"
+//       })
+//       console.log(error)
+//     }
+//   }
+
+//   SendEmail()
+
+// });
+
+
+
+app.post('/api/otp/send', async (req, res) => {
   const { email } = req.body;
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // use TLS
-    auth: {
-      user: process.env.MAIL_USER, // Your Gmail email address
-      pass: process.env.MAIL_PASS // Your Gmail password
-    }
-  });
-
-
-  const generateOtp = () => {
-    return Math.floor(100000 + Math.random() * 900000);
-  }
-
 
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
   }
-  
-  const otp = generateOtp();
-  console.log(otp)
-  console.log("the email is :", email)
 
+  // Step 1 — create the transporter
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true for 465, false for 587
+    auth: {
+      user: process.env.MAIL_USER, // your Gmail address
+      pass: process.env.MAIL_PASS, // your Gmail App Password
+    },
+  });
 
-  // Email configuration
-  const SendEmail = async () => {
-    try {
-
-      const info = await transporter.sendMail({
-        from: `"Fule Fix" <${process.env.MAIL_USER}>`,
-        to: email,
-        subject: 'Email Verification OTP',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  background-color: #f4f4f4;
-                  margin: 0;
-                  padding: 0;
-                }
-                .email-container {
-                  max-width: 600px;
-                  margin: 20px auto;
-                  background-color: #ffffff;
-                  border-radius: 8px;
-                  overflow: hidden;
-                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                }
-                .email-header {
-                  background-color: #007bff;
-                  color: #ffffff;
-                  text-align: center;
-                  padding: 20px;
-                }
-                .email-header h1 {
-                  margin: 0;
-                  font-size: 24px;
-                }
-                .email-body {
-                  padding: 20px;
-                  color: #333333;
-                  line-height: 1.6;
-                }
-                .email-body h2 {
-                  color: #007bff;
-                  font-size: 20px;
-                }
-                .otp-code {
-                  display: inline-block;
-                  background-color: #f8f9fa;
-                  color: #007bff;
-                  font-size: 24px;
-                  font-weight: bold;
-                  padding: 10px 20px;
-                  border-radius: 4px;
-                  margin: 20px 0;
-                }
-                .email-footer {
-                  text-align: center;
-                  padding: 20px;
-                  background-color: #f8f9fa;
-                  color: #666666;
-                  font-size: 14px;
-                }
-                .email-footer a {
-                  color: #007bff;
-                  text-decoration: none;
-                }
-              </style>
-
-          </head>
-          <body>
-            <div class="email-container">
-              <div class="email-header">
-                <h1>Fule Fix</h1>
-              </div>
-              <div class="email-body">
-                <h2>Email Verification</h2>
-                <p>Thank you for choosing <strong>Fule Fix</strong>. To complete your email verification, please use the OTP below:</p>
-                <div class="otp-code">${otp}</div>
-                <p>If you did not request this verification, please ignore this email.</p>
-                <p>Thank you,<br>The Fule Fix Team</p>
-              </div>
-              <div class="email-footer">
-                <p>&copy; 2025 Fule Fix. All rights reserved.</p>
-                <p><a href="https://fuelfix.vercel.app">Visit our website</a></p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `,
-      })
-
-      console.log("OTP send succuessfully")
-      const newOtp = await Otp.create({ email, otp })
-
-      res.status(200).json(info)
+  // Step 2 — verify connection before sending
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('SMTP Connection Error:', error.message);
+    } else {
+      console.log('✅ Server is ready to send emails');
     }
-    catch (error) {
-      res.status(500).json({
-        message: "server error"
-      })
-      console.log(error)
-    }
+  });
+
+  // Step 3 — generate OTP
+  const otp = Math.floor(100000 + Math.random() * 900000);
+
+  console.log('Generated OTP:', otp);
+  console.log('Email:', email);
+
+  // Step 4 — email HTML template
+  const htmlTemplate = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+        }
+        .email-container {
+          max-width: 600px;
+          margin: 20px auto;
+          background-color: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .email-header {
+          background-color: #007bff;
+          color: #ffffff;
+          text-align: center;
+          padding: 20px;
+        }
+        .email-header h1 {
+          margin: 0;
+          font-size: 24px;
+        }
+        .email-body {
+          padding: 20px;
+          color: #333333;
+          line-height: 1.6;
+        }
+        .email-body h2 {
+          color: #007bff;
+          font-size: 20px;
+        }
+        .otp-code {
+          display: inline-block;
+          background-color: #f8f9fa;
+          color: #007bff;
+          font-size: 24px;
+          font-weight: bold;
+          padding: 10px 20px;
+          border-radius: 4px;
+          margin: 20px 0;
+        }
+        .email-footer {
+          text-align: center;
+          padding: 20px;
+          background-color: #f8f9fa;
+          color: #666666;
+          font-size: 14px;
+        }
+        .email-footer a {
+          color: #007bff;
+          text-decoration: none;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="email-header">
+          <h1>Fuel Fix</h1>
+        </div>
+        <div class="email-body">
+          <h2>Email Verification</h2>
+          <p>Thank you for choosing <strong>Fuel Fix</strong>. To complete your email verification, please use the OTP below:</p>
+          <div class="otp-code">${otp}</div>
+          <p>If you did not request this verification, please ignore this email.</p>
+          <p>Thank you,<br>The Fuel Fix Team</p>
+        </div>
+        <div class="email-footer">
+          <p>&copy; 2025 Fuel Fix. All rights reserved.</p>
+          <p><a href="https://fuelfix.vercel.app">Visit our website</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    // Step 5 — send email
+    const info = await transporter.sendMail({
+      from: `"Fuel Fix" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: 'Email Verification OTP',
+      html: htmlTemplate,
+    });
+
+    console.log('✅ Email sent:', info.messageId);
+
+    // Step 6 — save OTP in DB (optional)
+    await Otp.create({ email, otp });
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully',
+      info,
+    });
+  } catch (error) {
+    console.error('❌ Error sending OTP:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP',
+      error: error.message,
+    });
   }
-
-  SendEmail()
-
 });
-
 
 app.post('/api/otp/verify', async (req, res) => {
   const { email, otp } = req.body;
