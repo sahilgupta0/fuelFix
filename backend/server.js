@@ -414,13 +414,17 @@ app.post('/api/otp/send', async (req, res) => {
   });
 
   // Step 2 — verify connection before sending
+  console.log("about to call transporter verify");
   transporter.verify((error, success) => {
+    console.log("inside transporter verify");
     if (error) {
       console.error('SMTP Connection Error:', error.message);
     } else {
       console.log('✅ Server is ready to send emails');
     }
+    console.log("about to leave transporter verify");
   });
+  console.log("trasnporter verify is called");
 
   // Step 3 — generate OTP
   const otp = Math.floor(100000 + Math.random() * 900000);
@@ -513,6 +517,7 @@ app.post('/api/otp/send', async (req, res) => {
 
   try {
     // Step 5 — send email
+    console.log("sending mail");
     const info = await transporter.sendMail({
       from: `"Fuel Fix" <${process.env.MAIL_USER}>`,
       to: email,
